@@ -1,0 +1,17 @@
+BasedOnStyle: Google
+ColumnLimit: 120
+
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+SpacesBeforeTrailingComments: 1
+
+SortIncludes: true
+IncludeBlocks: Preserve
