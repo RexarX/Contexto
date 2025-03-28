@@ -1,0 +1,18 @@
+{
+  "project" : {
+    "id" : "my_canvas_test-17154-AnE",
+    "name" : "my_canvas_test-17154-AnE",
+    "folder" : "/jaicp"
+  },
+  "settings" : {
+    "language" : "ru",
+    "spellingCorrection" : false,
+    "classificationAlgorithm" : "sts",
+    "timezone" : "UTC",
+    "businessShared" : false,
+    "business" : false
+  },
+  "intents" : [ ],
+  "entities" : [ ],
+  "enabledSystemEntities" : [ "duckling.number", "duckling.time", "duckling.duration", "duckling.phone-number", "duckling.email", "duckling.url" ]
+}

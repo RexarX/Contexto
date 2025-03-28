@@ -1,0 +1,80 @@
+components_manager:
+  task_processors:
+    main-task-processor:
+      worker_threads: 4
+    fs-task-processor:
+      worker_threads: 2
+
+  default_task_processor: main-task-processor
+
+  components:
+    server:
+      listener:
+        port: 8080
+        task_processor: main-task-processor
+      listener-monitor:
+        port: 8085
+        task_processor: main-task-processor
+
+    session-manager:
+      max-sessions: 10000
+
+    tests-control:
+      path: /tests/{action}
+      task_processor: main-task-processor
+      method: POST
+
+    testsuite-support: {}
+
+    logging:
+      fs-task-processor: fs-task-processor
+      loggers:
+        default:
+          file_path: '@stderr'
+          level: info
+          overflow_behavior: discard
+        
+        session-logger:
+          file_path: 'logs/session.log'
+          level: debug
+          overflow_behavior: discard
+        
+        http-logger:
+          file_path: 'logs/http.log'
+          level: info
+          overflow_behavior: discard
+        
+        error-logger:
+          file_path: 'logs/errors.log'
+          level: error
+          overflow_behavior: discard
+
+    # HTTP Client components
+    http-client:
+      fs-task-processor: fs-task-processor
+      user-agent: contesto/1.0
+      dns_resolver: async
+    
+    # DNS Client
+    dns-client:
+      fs-task-processor: fs-task-processor
+    
+    # API handlers
+    contesto-new-game-handler:
+      path: /api/new-game
+      method: POST
+      task_processor: main-task-processor
+      log-level: DEBUG
+
+    contesto-guess-handler:
+      path: /api/guess
+      method: POST
+      task_processor: main-task-processor
+      log-level: DEBUG
+
+    # Ping handler
+    ping:
+      path: /ping
+      method: GET
+      task_processor: main-task-processor
+      log-level: INFO

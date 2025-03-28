@@ -1,35 +1,22 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
   server: {
     port: 3000,
-    host: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => {
-          return path.replace(/^\/api/, '');
-        }
-      }
-    }
+    open: true,
   },
-  test: {
-    environment: 'jsdom',
-    setupFiles: ['./tests/setup.ts'],
-    globals: true,
-    css: true,
-    deps: {
-      inline: ['styled-components']
+  define: {
+    'import.meta.env': {
+      VITE_API_URL: process.env.VITE_API_URL,
+      VITE_APP_NAME: process.env.VITE_APP_NAME,
     },
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      exclude: ['node_modules/', 'tests/setup.ts']
-    },
-    testTimeout: 10000
-  }
+  },
 });

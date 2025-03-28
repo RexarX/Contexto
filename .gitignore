@@ -34,11 +34,10 @@
 # Build files
 bin/
 build/
-build*/
 out/
 
 # Dependency directories
-frontend/node_modules/
+node_modules/
 
 # VS Code
 .vscode/

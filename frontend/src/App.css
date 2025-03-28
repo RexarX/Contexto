@@ -1,0 +1,198 @@
+.Contexto-game {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.game-description {
+  color: #666;
+  font-size: 16px;
+}
+
+.words-container {
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  min-height: 300px;
+}
+
+.target-word {
+  padding: 15px;
+  background-color: #e9f7ef;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.target-word span {
+  font-weight: bold;
+  color: #27ae60;
+  font-size: 24px;
+}
+
+.words-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.word-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.word-rank {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 50%;
+  margin-right: 15px;
+  font-weight: bold;
+}
+
+.word-text {
+  font-size: 18px;
+}
+
+.hint-text {
+  text-align: center;
+  color: #999;
+  padding: 30px 0;
+  font-style: italic;
+}
+
+.guess-form {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.guess-input {
+  flex: 1;
+  padding: 12px 15px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 4px 0 0 4px;
+  transition: border-color 0.3s;
+}
+
+.guess-input:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+.guess-button {
+  padding: 12px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.guess-button:hover {
+  background-color: #2980b9;
+}
+
+.guess-button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.new-game-button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.new-game-button:hover {
+  background-color: #219653;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.word-item-new {
+  animation: highlight 1.5s ease-out;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: rgba(52, 152, 219, 0.2);
+    transform: translateX(-5px);
+  }
+  50% {
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: translateX(0);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Target word reveal animation */
+.target-word {
+  animation: revealTarget 1s ease-out;
+}
+
+@keyframes revealTarget {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.new-game-button {
+  animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

@@ -20,7 +20,8 @@
 </details>
 
 ## About The Project
-App with voice interaction feature for android tv
+
+Contexto is a word-guessing game where players have to find the secret word with unlimited guesses and hints.
 
 ## Getting Started
 
@@ -33,7 +34,7 @@ App with voice interaction feature for android tv
 ### How to build
 1. Clone the repo
 ```sh
-git clone https://github.com/RexarX/VoiceAssistant.git && git submodule update --init
+git clone https://github.com/RexarX/Contexto.git && git submodule update --init
 ```
 
 2. Install dependencies
@@ -50,15 +51,18 @@ Install backend dependencies
 ./install-deps.sh
 ```
 
-3. Build
+3. Build backend
 ```sh
-./build.sh
+cd backend
+./scripts/build.sh
 ```
 
 ## License
+
 Distributed under the MIT license. See `LICENSE` for more information.
 
 ## Contact
+
 RexarX - who727cares@gmail.com
 
 PlatonFPS - platonfps@yandex.ru
