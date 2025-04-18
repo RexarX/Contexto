@@ -170,3 +170,27 @@ install(
     DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}
     COMPONENT ${PROJECT_NAME}
 )
+
+set(ASSETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../assets)
+if(EXISTS ${ASSETS_DIR})
+    foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${ASSETS_DIR}
+                ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}/assets
+            COMMENT "Copying assets directory to ${OUTPUTCONFIG} build output"
+        )
+    endforeach()
+    
+    # Also install assets with the project
+    install(
+        DIRECTORY ${ASSETS_DIR}/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/assets
+        COMPONENT ${PROJECT_NAME}
+    )
+
+    message(STATUS "Assets directory will be included in build output")
+else()
+    message(STATUS "Assets directory not found at ${ASSETS_DIR}")
+endif()

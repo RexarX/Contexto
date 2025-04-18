@@ -142,12 +142,25 @@ void WordSimilarityService::LoadWordEmbeddings() {
 }
 
 void WordSimilarityService::LoadDictionary() {
-  // In a real application, load from a file or database
-  // For this example, we'll use a small set of hardcoded words
-  dictionary_ = {"кот",       "собака", "дом",    "машина",  "дерево",  "стол",   "книга",  "ручка", "телефон",
-                 "компьютер", "окно",   "дверь",  "человек", "ребенок", "город",  "страна", "море",  "река",
-                 "гора",      "небо",   "солнце", "луна",    "звезда",  "цветок", "трава"};
+  std::ifstream russian_nouns_file("assets/russian_nouns.txt");
+  if (!russian_nouns_file.is_open()) {
+    LOG_ERROR() << "Failed to open assets/russian_nouns.txt";
+    return;
+  }
 
+  dictionary_.clear();
+
+  std::string word;
+  while (std::getline(russian_nouns_file, word)) {
+    // Skip empty lines or lines that might be comments
+    if (word.empty() || word.starts_with("//")) {
+      continue;
+    }
+
+    dictionary_.push_back(word);
+  }
+
+  russian_nouns_file.close();
   LOG_INFO() << "Loaded " << dictionary_.size() << " words in dictionary";
 }
 

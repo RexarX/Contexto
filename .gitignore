@@ -41,3 +41,9 @@ node_modules/
 
 # VS Code
 .vscode/
+
+# Environment files
+*/.env
+
+# Log files
+*.log
