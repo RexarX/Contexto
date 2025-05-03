@@ -142,25 +142,38 @@ void WordSimilarityService::LoadWordEmbeddings() {
 }
 
 void WordSimilarityService::LoadDictionary() {
-  std::ifstream russian_nouns_file("assets/russian_nouns.txt");
-  if (!russian_nouns_file.is_open()) {
-    LOG_ERROR() << "Failed to open assets/russian_nouns.txt";
+  std::ifstream dictionary_file("assets/dictionary.txt");
+  if (!dictionary_file.is_open()) {
+    LOG_ERROR() << "Failed to open assets/dictionary.txt";
     return;
   }
 
   dictionary_.clear();
 
+  const size_t INCLUDED_WORDS_COUNT = 3000;
+  size_t already_included = 0;
+
   std::string word;
-  while (std::getline(russian_nouns_file, word)) {
+  while (std::getline(dictionary_file, word)) {
     // Skip empty lines or lines that might be comments
     if (word.empty() || word.starts_with("//")) {
       continue;
     }
 
+    // Remove numbers (including float numbers) before the word itself
+    size_t first_non_digit = word.find_first_not_of("0123456789. ");
+    if (first_non_digit != std::string::npos) {
+      word = word.substr(first_non_digit);
+    }
+
     dictionary_.push_back(word);
+
+    if (++already_included >= INCLUDED_WORDS_COUNT){
+      break;
+    }
   }
 
-  russian_nouns_file.close();
+  dictionary_file.close();
   LOG_INFO() << "Loaded " << dictionary_.size() << " words in dictionary";
 }
 
