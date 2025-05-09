@@ -29,7 +29,7 @@
 
 ## About The Project
 
-Contexto is a powerful voice-enabled application that combines a modern frontend with a high-performance C++ backend. It delivers a responsive and intuitive experience for voice interactions.
+Contexto is a word-guessing game where players have to find the secret word with unlimited guesses and hints.
 
 ## Getting Started
 
