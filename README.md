@@ -11,7 +11,15 @@
       <ul>
         <li><a href="#requirements">Requirements</a></li>
         <li><a href="#dependencies">Dependencies</a></li>
-        <li><a href="#how-to-build">How to build</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#development">Development</a>
+      <ul>
+        <li><a href="#using-makefile">Using Makefile</a></li>
+        <li><a href="#building-locally">Building Locally</a></li>
+        <li><a href="#using-docker">Using Docker</a></li>
       </ul>
     </li>
     <li><a href="#license">License</a></li>
@@ -21,54 +29,44 @@
 
 ## About The Project
 
-Contexto is a word-guessing game where players have to find the secret word with unlimited guesses and hints.
+Contexto is a powerful voice-enabled application that combines a modern frontend with a high-performance C++ backend. It delivers a responsive and intuitive experience for voice interactions.
 
 ## Getting Started
 
 ### Requirements
-* Compiler with C++23 support
+
+- Local development:
+
+  - Compiler with C++23 support
+  - Python 3.10+ with venv support
+  - Node.js 18+ and npm
+  - CMake 3.20+
+  - Ninja or Make build system
+
+- Docker development:
+  - Docker and Docker Compose
 
 ### Dependencies
-* [userver](https://github.com/userver-framework/userver)
 
-### How to build
-1. Clone the repo
+- Backend:
+
+  - [userver](https://github.com/userver-framework/userver) - High-performance C++ microservice framework
+  - Various system libraries (automatically installed via `install-deps.sh` or Docker)
+
+- Frontend:
+  - React-based web application
+  - Various npm packages (see `frontend/package.json`)
+
+### Installation
+
+#### Quick Start with Docker (Recommended)
+
 ```sh
-git clone https://github.com/RexarX/Contexto.git && git submodule update --init
+# Clone the repository with submodules
+git clone https://github.com/yourusername/Contexto.git && git submodule update --init
+cd Contexto
+
+# Build and start with Docker
+make docker-build
+make docker-up
 ```
-
-2. Install dependencies
-
-Install frontend dependencies
-```sh
-cd frontend
-npm install
-cd ..
-```
-
-Install backend dependencies
-```sh
-./install-deps.sh
-```
-
-3. Build backend
-```sh
-cd backend
-./scripts/build.sh
-```
-
-## License
-
-Distributed under the MIT license. See `LICENSE` for more information.
-
-## Contact
-
-RexarX - who727cares@gmail.com
-
-PlatonFPS - platonfps@yandex.ru
-
-pechikoo11 - shysha.shit@mail.ru
-
-SindbaDRef - vnemaevv@mail.ru
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>

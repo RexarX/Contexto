@@ -2,7 +2,7 @@
 
 #include "pch.hpp"
 
-namespace contesto::models {
+namespace contexto::models {
 
 struct Word {
   std::string id;
@@ -10,4 +10,4 @@ struct Word {
   int64_t rank = 0;
 };
 
-}  // namespace contesto::models
+}  // namespace contexto::models

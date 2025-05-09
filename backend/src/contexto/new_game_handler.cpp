@@ -6,7 +6,7 @@
 #include <userver/server/http/http_status.hpp>
 #include <userver/utils/uuid4.hpp>
 
-namespace contesto {
+namespace contexto {
 
 NewGameHandler::NewGameHandler(const userver::components::ComponentConfig& config,
                                const userver::components::ComponentContext& context)
@@ -55,4 +55,4 @@ std::string NewGameHandler::HandleRequestThrow(const userver::server::http::Http
   }
 }
 
-}  // namespace contesto
+}  // namespace contexto

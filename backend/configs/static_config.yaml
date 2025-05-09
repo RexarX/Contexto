@@ -52,7 +52,7 @@ components_manager:
     # HTTP Client components
     http-client:
       fs-task-processor: fs-task-processor
-      user-agent: contesto/1.0
+      user-agent: contexto/1.0
       dns_resolver: async
     
     # DNS Client
@@ -60,13 +60,13 @@ components_manager:
       fs-task-processor: fs-task-processor
     
     # API handlers
-    contesto-new-game-handler:
+    contexto-new-game-handler:
       path: /api/new-game
       method: POST
       task_processor: main-task-processor
       log-level: DEBUG
 
-    contesto-guess-handler:
+    contexto-guess-handler:
       path: /api/guess
       method: POST
       task_processor: main-task-processor

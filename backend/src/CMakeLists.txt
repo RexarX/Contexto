@@ -1,8 +1,8 @@
 file(GLOB_RECURSE OBJ_SOURCES
-    hello/*.hpp hello/*.cpp
-    contesto/*.hpp contesto/*.cpp
-    contesto/models/*.hpp contesto/models/*.cpp
-    contesto/repositories/*.hpp contesto/repositories/*.cpp
+    hello/*.cpp
+    contexto/*.cpp
+    contexto/models/*.cpp
+    contexto/repositories/*.cpp
 )
 
 if(ENABLE_UNITY_BUILD)
@@ -63,61 +63,60 @@ target_compile_options(${PROJECT_NAME}_objs PRIVATE
 
 if(ENABLE_SIMD_SSE2)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-	    $<$<CXX_COMPILER_ID:Clang,GNU>:
+     $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-msse2>
-		    $<$<CONFIG:Release>:-msse2>   
-	    >
+      $<$<CONFIG:Release>:-msse2>
+     >
     )
 elseif(ENABLE_SIMD_SSE3)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-	    $<$<CXX_COMPILER_ID:Clang,GNU>:
+     $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-msse3>
-		    $<$<CONFIG:Release>:-msse3> 
-	    >
+      $<$<CONFIG:Release>:-msse3>
+     >
     )
 elseif(ENABLE_SIMD_SSSE3)
-	target_compile_options(${PROJECT_NAME}_objs PRIVATE
-		$<$<CXX_COMPILER_ID:Clang,GNU>:
+    target_compile_options(${PROJECT_NAME}_objs PRIVATE
+  $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-mssse3>
-			$<$<CONFIG:Release>:-mssse3>
-		>
-	)
+   $<$<CONFIG:Release>:-mssse3>
+  >
+ )
 elseif(ENABLE_SIMD_SSE4_1)
-	target_compile_options(${PROJECT_NAME}_objs PRIVATE
-		$<$<CXX_COMPILER_ID:Clang,GNU>:
+    target_compile_options(${PROJECT_NAME}_objs PRIVATE
+  $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-msse4.1>
-			$<$<CONFIG:Release>:-msse4.1>	
-		>
-	)
+   $<$<CONFIG:Release>:-msse4.1>
+  >
+ )
 elseif(ENABLE_SIMD_SSE4_2)
-	target_compile_options(${PROJECT_NAME}_objs PRIVATE
-		$<$<CXX_COMPILER_ID:Clang,GNU>:
-			$<$<CONFIG:Release>:-msse4.2>
-			$<$<CONFIG:RelWithDebInfo>:-msse4.2>
-		>
-	)
+    target_compile_options(${PROJECT_NAME}_objs PRIVATE
+  $<$<CXX_COMPILER_ID:Clang,GNU>:
+   $<$<CONFIG:Release>:-msse4.2>
+   $<$<CONFIG:RelWithDebInfo>:-msse4.2>
+  >
+ )
 elseif(ENABLE_SIMD_AVX)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-		$<$<CXX_COMPILER_ID:Clang,GNU>:
+  $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-mavx>
-			$<$<CONFIG:Release>:-mavx>
-			
-		>
+   $<$<CONFIG:Release>:-mavx>
+
+  >
     )
 elseif(ENABLE_SIMD_AVX2)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-		$<$<CXX_COMPILER_ID:Clang,GNU>:
+  $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-mavx2>
-			$<$<CONFIG:Release>:-mavx2>
-		>
+   $<$<CONFIG:Release>:-mavx2>
+  >
     )
 endif()
 
-#find_package(userver REQUIRED COMPONENTS core postgresql)
+find_package(PkgConfig REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}_objs PRIVATE
     userver-core
-    userver-postgresql
 )
 
 add_executable(${PROJECT_NAME} main.cpp)
@@ -132,7 +131,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     userver-core
-    userver-postgresql
     ${PROJECT_NAME}_objs
 )
 
@@ -166,7 +164,7 @@ set(CONFIG_FILES
 )
 
 install(
-    FILES ${CONFIG_FILES} 
+    FILES ${CONFIG_FILES}
     DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}
     COMPONENT ${PROJECT_NAME}
 )
@@ -182,7 +180,7 @@ if(EXISTS ${ASSETS_DIR})
             COMMENT "Copying assets directory to ${OUTPUTCONFIG} build output"
         )
     endforeach()
-    
+
     # Also install assets with the project
     install(
         DIRECTORY ${ASSETS_DIR}/

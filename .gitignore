@@ -42,9 +42,11 @@ node_modules/
 # VS Code
 .vscode/
 
+# Cache
+.cache/
+
 # Environment files
-*/.env
+frontend/.env
 
 # Log files
 *.log
-frontend/.env

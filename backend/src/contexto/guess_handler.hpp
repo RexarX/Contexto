@@ -5,11 +5,11 @@
 
 #include <userver/server/handlers/http_handler_base.hpp>
 
-namespace contesto {
+namespace contexto {
 
 class GuessHandler final : public userver::server::handlers::HttpHandlerBase {
 public:
-  static constexpr std::string_view kName = "contesto-guess-handler";
+  static constexpr std::string_view kName = "contexto-guess-handler";
 
   GuessHandler(const userver::components::ComponentConfig&, const userver::components::ComponentContext&);
 
@@ -21,4 +21,4 @@ private:
   SessionManager& session_manager_;
 };
 
-}  // namespace contesto
+}  // namespace contexto

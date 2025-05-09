@@ -1,0 +1,47 @@
+services:
+  backend:
+    build: .
+    volumes:
+      - ./:/app
+      - backend_build:/app/backend/build
+      - /app/frontend/node_modules # Don't mount host node_modules
+    environment:
+      - TERM=xterm-color
+    ports:
+      - "8081:8080" # Changed external port to 8081 to avoid conflict
+    command: /bin/bash -c "cd backend && ./scripts/build.sh --type Release --compiler gcc --build-system ninja --no-tests && ./scripts/run.sh --type Release"
+
+  frontend:
+    build: .
+    volumes:
+      - ./:/app
+      - /app/frontend/node_modules # Don't mount host node_modules
+    environment:
+      - TERM=xterm-color
+      - HOST=0.0.0.0 # Allow external connections
+    ports:
+      - "3000:3000" # Frontend development server port
+    command: /bin/bash -c "cd frontend && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+
+  dev:
+    build: .
+    volumes:
+      - ./:/app
+      - backend_build:/app/backend/build
+      - /app/frontend/node_modules # Don't mount host node_modules
+    environment:
+      - TERM=xterm-color
+      - HOST=0.0.0.0 # Allow external connections
+    ports:
+      - "8082:8080" # Changed external port to 8082 to avoid conflict
+      - "8085:8085" # Monitor port
+      - "3001:3000" # Changed frontend external port to 3001 to avoid conflict
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+
+volumes:
+  backend_build:

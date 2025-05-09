@@ -4,7 +4,7 @@
 #include <userver/logging/log.hpp>
 #include <userver/yaml_config/merge_schemas.hpp>
 
-namespace contesto {
+namespace contexto {
 
 SessionManager::SessionManager(const userver::components::ComponentConfig& config,
                                const userver::components::ComponentContext& context)
@@ -47,4 +47,4 @@ properties:
 )");
 }
 
-}  // namespace contesto
+}  // namespace contexto

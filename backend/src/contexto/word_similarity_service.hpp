@@ -2,10 +2,11 @@
 
 #include "models/word.hpp"
 
+#include <userver/components/component_config.hpp>
+#include <userver/components/component_context.hpp>
 #include <userver/engine/mutex.hpp>
-#include <userver/storages/postgres/cluster.hpp>
 
-namespace contesto {
+namespace contexto {
 
 class WordSimilarityService {
 public:
@@ -15,8 +16,8 @@ public:
   std::string GenerateNewTargetWord();
   std::vector<models::Word> GetSimilarWords(std::string_view word, std::string_view target_word);
 
-  inline bool ValidateWord(std::string_view word) {
-    return std::find(dictionary_.begin(), dictionary_.end(), word) != dictionary_.end();
+  bool ValidateWord(std::string_view word) const {
+    return !word.empty() && std::find(dictionary_.begin(), dictionary_.end(), word) != dictionary_.end();
   }
 
 private:
@@ -24,12 +25,10 @@ private:
   void LoadWordEmbeddings();
   void LoadDictionary();
 
-private:
-  userver::storages::postgres::ClusterPtr pg_cluster_;
   userver::engine::Mutex mutex_;
 
   std::unordered_map<std::string_view, std::vector<float>> word_embeddings_;
   std::vector<std::string> dictionary_;
 };
 
-}  // namespace contesto
+}  // namespace contexto

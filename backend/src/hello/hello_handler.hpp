@@ -8,7 +8,7 @@
 
 namespace app {
 
-static inline std::string GetWelcomeMessage(std::string_view name) {
+static std::string GetWelcomeMessage(std::string_view name) {
   if (!name.empty()) {
     return fmt::format("Привет, {}! Добро пожаловать в аудиогид.", name);
   } else {

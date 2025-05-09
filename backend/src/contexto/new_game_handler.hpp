@@ -5,11 +5,11 @@
 
 #include <userver/server/handlers/http_handler_base.hpp>
 
-namespace contesto {
+namespace contexto {
 
 class NewGameHandler final : public userver::server::handlers::HttpHandlerBase {
 public:
-  static constexpr std::string_view kName = "contesto-new-game-handler";
+  static constexpr std::string_view kName = "contexto-new-game-handler";
 
   NewGameHandler(const userver::components::ComponentConfig&, const userver::components::ComponentContext&);
 
@@ -21,4 +21,4 @@ private:
   SessionManager& session_manager_;
 };
 
-}  // namespace contesto
+}  // namespace contexto

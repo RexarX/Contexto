@@ -5,7 +5,7 @@
 #include <userver/logging/log.hpp>
 #include <userver/server/http/http_status.hpp>
 
-namespace contesto {
+namespace contexto {
 
 GuessHandler::GuessHandler(const userver::components::ComponentConfig& config,
                            const userver::components::ComponentContext& context)
@@ -24,7 +24,6 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
 
   try {
     const auto& body = request.RequestBody();
-
     if (body.empty()) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
       LOG_ERROR() << "Empty request body";
@@ -99,4 +98,4 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
   }
 }
 
-}  // namespace contesto
+}  // namespace contexto

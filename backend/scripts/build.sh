@@ -13,7 +13,6 @@ NC='\033[0m' # No Color
 # Determine script location and project root regardless of how the script is invoked
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
-SCRIPT_NAME="$(basename "$SCRIPT_PATH")"
 
 # Determine the actual backend directory (project root)
 # If script is in backend/scripts, project root is one directory up
@@ -118,7 +117,7 @@ select_build_type() {
     echo "1) Debug"
     echo "2) RelWithDebInfo"
     echo "3) Release"
-    
+
     local choice
     read -p "Enter your choice (1, 2, or 3): " choice
     case $choice in
@@ -130,7 +129,7 @@ select_build_type() {
             select_build_type
             ;;
     esac
-    
+
     print_info "Selected build type: $BUILD_TYPE"
 }
 
@@ -138,39 +137,39 @@ select_compiler() {
     # Check for available compilers
     local HAS_GCC=0
     local HAS_CLANG=0
-    
+
     if command -v gcc &>/dev/null; then
         HAS_GCC=1
     fi
-    
+
     if command -v clang &>/dev/null; then
         HAS_CLANG=1
     fi
-    
+
     if [[ $HAS_GCC -eq 0 && $HAS_CLANG -eq 0 ]]; then
         print_error "No supported compiler found!"
         exit 1
     fi
-    
+
     if [[ $HAS_GCC -eq 1 && $HAS_CLANG -eq 0 ]]; then
         print_warning "Only GCC is available. Using GCC."
         COMPILER="gcc"
         CXX_COMPILER="g++"
         return 0
     fi
-    
+
     if [[ $HAS_GCC -eq 0 && $HAS_CLANG -eq 1 ]]; then
         print_warning "Only Clang is available. Using Clang."
         COMPILER="clang"
         CXX_COMPILER="clang++"
         return 0
     fi
-    
+
     # Both are available, ask user
     print_info "Please select the compiler:"
     echo "1) GCC"
     echo "2) Clang"
-    
+
     local choice
     read -p "Enter your choice (1 or 2): " choice
     case $choice in
@@ -187,7 +186,7 @@ select_compiler() {
             select_compiler
             ;;
     esac
-    
+
     print_info "Selected compiler: $COMPILER / $CXX_COMPILER"
 }
 
@@ -195,37 +194,37 @@ select_build_system() {
     # Check for available build systems
     local HAS_MAKE=0
     local HAS_NINJA=0
-    
+
     if command -v make &>/dev/null; then
         HAS_MAKE=1
     fi
-    
+
     if command -v ninja &>/dev/null; then
         HAS_NINJA=1
     fi
-    
+
     if [[ $HAS_MAKE -eq 0 && $HAS_NINJA -eq 0 ]]; then
         print_error "No supported build system found!"
         exit 1
     fi
-    
+
     if [[ $HAS_MAKE -eq 1 && $HAS_NINJA -eq 0 ]]; then
         print_warning "Only Make is available. Using Make."
         BUILD_SYSTEM="make"
         return 0
     fi
-    
+
     if [[ $HAS_MAKE -eq 0 && $HAS_NINJA -eq 1 ]]; then
         print_warning "Only Ninja is available. Using Ninja."
         BUILD_SYSTEM="ninja"
         return 0
     fi
-    
+
     # Both are available, ask user
     print_info "Please select the build system:"
     echo "1) Make"
     echo "2) Ninja (faster)"
-    
+
     local choice
     read -p "Enter your choice (1 or 2): " choice
     case $choice in
@@ -236,7 +235,7 @@ select_build_system() {
             select_build_system
             ;;
     esac
-    
+
     print_info "Selected build system: $BUILD_SYSTEM"
 }
 
@@ -315,27 +314,27 @@ parse_args() {
 
 check_dependencies() {
     print_info "Checking build dependencies..."
-    
+
     # Check for CMake
     if ! command -v cmake &>/dev/null; then
         print_error "CMake not found"
         print_info "Please install cmake (https://cmake.org/download/)"
         exit 1
     fi
-    
+
     # Validate compiler
     if [[ -n "$COMPILER" ]]; then
         if ! command -v "$COMPILER" &>/dev/null; then
             print_error "Compiler $COMPILER not found"
             COMPILER=""  # Reset to allow selection
         fi
-        
+
         if ! command -v "$CXX_COMPILER" &>/dev/null; then
             print_error "C++ Compiler $CXX_COMPILER not found"
             COMPILER=""  # Reset to allow selection
         fi
     fi
-    
+
     # Validate build system
     if [[ "$BUILD_SYSTEM" == "ninja" ]]; then
         if ! command -v ninja &>/dev/null; then
@@ -348,12 +347,12 @@ check_dependencies() {
             BUILD_SYSTEM=""  # Reset to allow selection
         fi
     fi
-    
+
     # Check for Git
     if ! command -v git &>/dev/null; then
         print_warning "Git not found, version information might be unavailable"
     fi
-    
+
     print_success "Build dependency check completed"
 }
 
@@ -361,11 +360,11 @@ check_generator_change() {
     # Check if we need to clean due to build system change
     if [[ -f "$BUILD_DIR/CMakeCache.txt" ]]; then
         local CURRENT_GENERATOR=""
-        
+
         # Extract current generator
         if grep -q "CMAKE_GENERATOR:INTERNAL=" "$BUILD_DIR/CMakeCache.txt"; then
             CURRENT_GENERATOR=$(grep "CMAKE_GENERATOR:INTERNAL=" "$BUILD_DIR/CMakeCache.txt" | cut -d'=' -f2)
-            
+
             # Check if generator would change
             if [[ "$BUILD_SYSTEM" == "ninja" && "$CURRENT_GENERATOR" != "Ninja" ]]; then
                 print_warning "Build system changed from $CURRENT_GENERATOR to Ninja"
@@ -380,16 +379,16 @@ check_generator_change() {
 
 run_executable() {
     local run_script="${PROJECT_ROOT}/scripts/run.sh"
-    
+
     if [[ ! -x "$run_script" ]]; then
         chmod +x "$run_script"
     fi
-    
+
     print_info "Running the executable..."
-    
+
     # Run the script with appropriate parameters
     "$run_script" --type "$BUILD_TYPE" --build-dir "$BUILD_DIR"
-    
+
     local exit_code=$?
     if [[ $exit_code -ne 0 ]]; then
         print_error "Program exited with non-zero code: $exit_code"
@@ -399,25 +398,25 @@ run_executable() {
 main() {
     print_info "Contexto Backend Build Script"
     print_info "====================================="
-    
+
     print_info "Project root detected at: $PROJECT_ROOT"
-    
+
     parse_args "$@"
     check_dependencies
-    
+
     # Interactive prompts for missing configuration
     if [[ -z "$BUILD_TYPE" ]]; then
         select_build_type
     fi
-    
+
     if [[ -z "$COMPILER" ]]; then
         select_compiler
     fi
-    
+
     if [[ -z "$BUILD_SYSTEM" ]]; then
         select_build_system
     fi
-    
+
     # Ask about tests if not specified through command line
     if [[ -z "$BUILD_TESTS" ]]; then
         if ask_yes_no "Do you want to build tests?" "n"; then
@@ -426,10 +425,10 @@ main() {
             BUILD_TESTS=0
         fi
     fi
-    
+
     # Check if build system changed
     check_generator_change
-    
+
     # Format code if requested
     if [[ "$FORMAT_CODE" -eq 1 ]]; then
         print_info "Formatting code..."
@@ -444,17 +443,17 @@ main() {
             print_warning "format.sh not found at $format_script, skipping formatting"
         fi
     fi
-    
+
     # Clean build directory if requested
     if [[ "$CLEAN_BUILD" -eq 1 && -d "$BUILD_DIR" ]]; then
         print_info "Cleaning build directory..."
         rm -rf "$BUILD_DIR"
     fi
-    
+
     # Create and enter build directory
     mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR" || exit 1
-    
+
     # Configure project
     print_info "Configuring project with:"
     print_info "  Build type: $BUILD_TYPE"
@@ -462,37 +461,38 @@ main() {
     print_info "  Build system: $BUILD_SYSTEM"
     print_info "  Tests: $([[ "$BUILD_TESTS" -eq 1 ]] && echo "Enabled" || echo "Disabled")"
     print_info "  Build directory: $BUILD_DIR"
-    
+
     # Build the cmake arguments
     local cmake_args=(
         "-DCMAKE_BUILD_TYPE=$BUILD_TYPE"
         "-DCMAKE_C_COMPILER=$COMPILER"
         "-DCMAKE_CXX_COMPILER=$CXX_COMPILER"
+        #"-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
         "-DBUILD_TESTS=$([[ "$BUILD_TESTS" -eq 1 ]] && echo "ON" || echo "OFF")"
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     )
-    
+
     # Set generator based on build system
     if [[ "$BUILD_SYSTEM" == "ninja" ]]; then
         cmake_args+=("-GNinja")
     elif [[ "$BUILD_SYSTEM" == "make" ]]; then
         cmake_args+=("-G" "Unix Makefiles")  # Fixed Unix Makefiles format
     fi
-    
+
     # Print the actual command for debugging
     echo -n "Running: cmake "
     printf "%s " "${cmake_args[@]}"
     echo "$PROJECT_ROOT"
-    
+
     # Run CMake with the correct path to project root
     if ! cmake "${cmake_args[@]}" "$PROJECT_ROOT"; then
         print_error "CMake configuration failed!"
         exit 1
     fi
-    
+
     # Build the project
     print_info "Building Contexto Backend..."
-    
+
     if [[ "$BUILD_SYSTEM" == "ninja" ]]; then
         if ! ninja -j "$PARALLEL_JOBS"; then
             print_error "Build failed!"
@@ -504,7 +504,7 @@ main() {
             exit 1
         fi
     fi
-    
+
     # Lint code if requested - after build so compile_commands.json is available
     if [[ "$LINT_CODE" -eq 1 ]]; then
         print_info "Linting code..."
@@ -520,24 +520,24 @@ main() {
             print_warning "lint.sh not found at $lint_script, skipping linting"
         fi
     fi
-    
+
     print_success "Build successful!"
-    
+
     # Display the path to the executable based on build type
     local exe_path="$BUILD_DIR/bin"
     [[ -d "$exe_path/$BUILD_TYPE" ]] && exe_path="$exe_path/$BUILD_TYPE"
-    
+
     if [[ -d "$exe_path" ]]; then
         print_info "Executables can be found in: $exe_path"
     fi
-    
+
     # Ask about running the application if not specified through command line
     if [[ "$RUN_AFTER_BUILD" -ne 1 ]]; then
         if ask_yes_no "Do you want to run the application?" "y"; then
             RUN_AFTER_BUILD=1
         fi
     fi
-    
+
     # Run the executable if requested
     if [[ "$RUN_AFTER_BUILD" -eq 1 ]]; then
         run_executable

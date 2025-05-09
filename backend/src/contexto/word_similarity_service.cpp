@@ -2,21 +2,20 @@
 
 #include <userver/components/component_context.hpp>
 #include <userver/logging/log.hpp>
-#include <userver/storages/postgres/component.hpp>
 #include <userver/utils/assert.hpp>
 
 #include <fmt/format.h>
 
-namespace contesto {
+namespace contexto {
 
 WordSimilarityService::WordSimilarityService(const userver::components::ComponentConfig&,
-                                             const userver::components::ComponentContext& context)
-/*: pg_cluster_(context.FindComponent<userver::components::Postgres>("postgres-db-1").GetCluster())*/ {
+                                             const userver::components::ComponentContext& context) {
   LoadDictionary();
   LoadWordEmbeddings();
 }
 
 std::string WordSimilarityService::GenerateNewTargetWord() {
+  //std::linear_congruential_engine
   std::random_device rd;
   std::mt19937 generator(rd());
 
@@ -29,9 +28,7 @@ std::string WordSimilarityService::GenerateNewTargetWord() {
 }
 
 std::vector<models::Word> WordSimilarityService::GetSimilarWords(std::string_view word, std::string_view target_word) {
-  if (!ValidateWord(word) || !ValidateWord(target_word)) {
-    return {};
-  }
+  if (!ValidateWord(word) || !ValidateWord(target_word)) return {};
 
   std::vector<models::Word> similar_words;
 
@@ -48,9 +45,7 @@ std::vector<models::Word> WordSimilarityService::GetSimilarWords(std::string_vie
 
 double WordSimilarityService::CalculateSimilarity(std::string_view word1, std::string_view word2) {
   // Simple case - exact match
-  if (word1 == word2) {
-    return 1.0;
-  }
+  if (word1 == word2) return 1.0;
 
   // Check if both words are in our embeddings
   const auto it1 = word_embeddings_.find(word1);
@@ -65,19 +60,16 @@ double WordSimilarityService::CalculateSimilarity(std::string_view word1, std::s
     const size_t max_len = std::max(len1, len2);
 
     // Both empty strings
-    if (max_len == 0) {
-      return 1.0;
-    }
+    if (max_len == 0) return 1.0;
 
     // Common prefix
     size_t common_prefix = 0;
     const size_t min_len = std::min(len1, len2);
     for (size_t i = 0; i < min_len; ++i) {
-      if (word1[i] == word2[i]) {
+      if (word1[i] == word2[i])
         ++common_prefix;
-      } else {
+      else
         break;
-      }
     }
 
     return static_cast<double>(common_prefix) / max_len;
@@ -97,18 +89,12 @@ double WordSimilarityService::CalculateSimilarity(std::string_view word1, std::s
     norm2 += vec2[i] * vec2[i];
   }
 
-  if (norm1 == 0.0 || norm2 == 0.0) {
-    return 0.0;
-  }
+  if (norm1 == 0.0 || norm2 == 0.0) return 0.0;
 
   return dot_product / (std::sqrt(norm1) * std::sqrt(norm2));
 }
 
 void WordSimilarityService::LoadWordEmbeddings() {
-  // In a real application, you would load pre-trained word embeddings
-  // For this example, we'll create some simple dummy embeddings
-
-  // This would typically load from a file or database
   for (const auto& word : dictionary_) {
     std::vector<float> embedding;
     embedding.reserve(50);  // 50-dimensional embeddings
@@ -150,31 +136,28 @@ void WordSimilarityService::LoadDictionary() {
 
   dictionary_.clear();
 
-  const size_t INCLUDED_WORDS_COUNT = 3000;
+  constexpr size_t INCLUDED_WORDS_COUNT = 3000;
   size_t already_included = 0;
 
   std::string word;
   while (std::getline(dictionary_file, word)) {
     // Skip empty lines or lines that might be comments
-    if (word.empty() || word.starts_with("//")) {
-      continue;
-    }
+    if (word.empty() || word.starts_with("//")) continue;
 
     // Remove numbers (including float numbers) before the word itself
-    size_t first_non_digit = word.find_first_not_of("0123456789. ");
+    const size_t first_non_digit = word.find_first_not_of("0123456789. ");
     if (first_non_digit != std::string::npos) {
       word = word.substr(first_non_digit);
     }
 
+    if (word.empty() || word.starts_with("//")) continue;
     dictionary_.push_back(word);
 
-    if (++already_included >= INCLUDED_WORDS_COUNT){
-      break;
-    }
+    if (++already_included >= INCLUDED_WORDS_COUNT) break;
   }
 
   dictionary_file.close();
   LOG_INFO() << "Loaded " << dictionary_.size() << " words in dictionary";
 }
 
-}  // namespace contesto
+}  // namespace contexto
