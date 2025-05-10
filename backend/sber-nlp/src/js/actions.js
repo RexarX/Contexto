@@ -16,12 +16,3 @@ function newGame(context) {
     context,
   );
 }
-
-function provideHint(context) {
-  addAction(
-    {
-      type: "get_hint",
-    },
-    context,
-  );
-}

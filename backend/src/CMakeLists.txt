@@ -63,53 +63,52 @@ target_compile_options(${PROJECT_NAME}_objs PRIVATE
 
 if(ENABLE_SIMD_SSE2)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-     $<$<CXX_COMPILER_ID:Clang,GNU>:
+        $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-msse2>
-      $<$<CONFIG:Release>:-msse2>
-     >
+            $<$<CONFIG:Release>:-msse2>
+        >
     )
 elseif(ENABLE_SIMD_SSE3)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-     $<$<CXX_COMPILER_ID:Clang,GNU>:
+        $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-msse3>
-      $<$<CONFIG:Release>:-msse3>
-     >
+            $<$<CONFIG:Release>:-msse3>
+        >
     )
 elseif(ENABLE_SIMD_SSSE3)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-  $<$<CXX_COMPILER_ID:Clang,GNU>:
+        $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-mssse3>
-   $<$<CONFIG:Release>:-mssse3>
-  >
+            $<$<CONFIG:Release>:-mssse3>
+        >
  )
 elseif(ENABLE_SIMD_SSE4_1)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-  $<$<CXX_COMPILER_ID:Clang,GNU>:
+        $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-msse4.1>
-   $<$<CONFIG:Release>:-msse4.1>
-  >
+            $<$<CONFIG:Release>:-msse4.1>
+        >
  )
 elseif(ENABLE_SIMD_SSE4_2)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-  $<$<CXX_COMPILER_ID:Clang,GNU>:
-   $<$<CONFIG:Release>:-msse4.2>
-   $<$<CONFIG:RelWithDebInfo>:-msse4.2>
-  >
+        $<$<CXX_COMPILER_ID:Clang,GNU>:
+            $<$<CONFIG:Release>:-msse4.2>
+            $<$<CONFIG:RelWithDebInfo>:-msse4.2>
+        >
  )
 elseif(ENABLE_SIMD_AVX)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-  $<$<CXX_COMPILER_ID:Clang,GNU>:
+        $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-mavx>
-   $<$<CONFIG:Release>:-mavx>
-
-  >
+            $<$<CONFIG:Release>:-mavx>
+        >
     )
 elseif(ENABLE_SIMD_AVX2)
     target_compile_options(${PROJECT_NAME}_objs PRIVATE
-  $<$<CXX_COMPILER_ID:Clang,GNU>:
+        $<$<CXX_COMPILER_ID:Clang,GNU>:
             $<$<CONFIG:RelWithDebInfo>:-mavx2>
-   $<$<CONFIG:Release>:-mavx2>
-  >
+            $<$<CONFIG:Release>:-mavx2>
+        >
     )
 endif()
 
@@ -120,6 +119,12 @@ target_link_libraries(${PROJECT_NAME}_objs PRIVATE
 )
 
 add_executable(${PROJECT_NAME} main.cpp)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:pch.hpp>

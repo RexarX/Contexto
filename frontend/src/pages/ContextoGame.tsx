@@ -11,20 +11,12 @@ const StyledHeader = styled(Header)`
   text-align: center;
   display: block;
   margin-bottom: 1.5rem;
-  width: 100%; /* Ensure the header takes the full width */
+  width: 100%;
 `;
 
 const StyledHeadline = styled(Headline1)`
   margin-bottom: 0.5rem;
-  text-align: center; /* Explicitly center the headline text */
-  width: 100%;
-`;
-
-const StyledBody = styled(Body1)`
-  color: rgba(255, 255, 255, 0.6);
-  display: block;
-  margin-top: 0.5rem;
-  text-align: center; /* Center this text as well */
+  text-align: center;
   width: 100%;
 `;
 

@@ -17,11 +17,11 @@ GuessHandler::GuessHandler(const userver::components::ComponentConfig& config,
 
 std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRequest& request,
                                              userver::server::request::RequestContext& context) const {
-  auto& response = request.GetHttpResponse();
-  response.SetHeader(std::string_view("Access-Control-Allow-Origin"), "*");
-  response.SetHeader(std::string_view("Access-Control-Allow-Methods"), "GET, POST, OPTIONS");
-  response.SetHeader(std::string_view("Access-Control-Allow-Headers"), "Content-Type");
-  response.SetHeader(std::string_view("Access-Control-Allow-Credentials"), "true");
+  auto& http_response = request.GetHttpResponse();
+  http_response.SetHeader(std::string_view("Access-Control-Allow-Origin"), "*");
+  http_response.SetHeader(std::string_view("Access-Control-Allow-Methods"), "GET, POST, OPTIONS");
+  http_response.SetHeader(std::string_view("Access-Control-Allow-Headers"), "Content-Type");
+  http_response.SetHeader(std::string_view("Access-Control-Allow-Credentials"), "true");
 
   if (request.GetMethod() == userver::server::http::HttpMethod::kOptions) {
     request.SetResponseStatus(userver::server::http::HttpStatus::kOk);
@@ -67,7 +67,7 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Invalid game session"));
     }
 
-    const std::string target_word = session_manager_.GetTargetWord(session_id);
+    const std::string_view target_word = session_manager_.GetTargetWord(session_id);
 
     // Validate the word
     if (!similarity_service_->ValidateWord(guessed_word)) {
@@ -85,7 +85,7 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Failed to process word"));
     }
 
-    const auto& result = similar_words[0];
+    const auto& result = similar_words.front();
     const bool is_correct = (guessed_word == target_word);
 
     const auto response =
@@ -93,6 +93,8 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
 
     LOG_INFO() << "Guess: " << guessed_word << ", Rank: " << result.rank
                << ", Correct: " << (is_correct ? "yes" : "no");
+
+    session_manager_.AddGuess(session_id, std::move(guessed_word), result.rank, result.similarity_score);
 
     return userver::formats::json::ToString(response);
 

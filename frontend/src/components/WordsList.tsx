@@ -54,8 +54,24 @@ const HintText = styled(Body1)`
   font-style: italic;
 `;
 
-const RankBadge = styled(Badge)`
-  margin-right: 0.75rem;
+const RankBadge = styled(Badge)<{ customView?: string }>`
+  background-color: ${(props) => {
+    switch (props.customView) {
+      case "accent":
+        return "#27ae60"; // Green for very close matches
+      case "default":
+        return "#3498db"; // Blue for medium matches
+      case "low":
+        return "#95a5a6"; // Gray for distant matches
+      default:
+        return ""; // Use default Badge color
+    }
+  }};
+  min-width: 24px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const WordsList: React.FC<WordsListProps> = ({
@@ -97,30 +113,32 @@ export const WordsList: React.FC<WordsListProps> = ({
         {words.length === 0 ? (
           <HintText>Попробуйте угадать секретное слово!</HintText>
         ) : (
-          words.map((word) => (
-            <WordItem
-              key={word.id}
-              isNew={word.id === lastAddedWordId}
-              content={word.text}
-              contentLeft={
-                <RankBadge
-                  view={
-                    word.rank === -1 // Handle potential NaN case from previous step
-                      ? "default"
-                      : word.rank <= 5
-                        ? "accent"
-                        : word.rank <= 20
-                          ? "default"
-                          : "secondary"
-                  }
-                  size="s" // Explicitly set size if needed, default might be too small for text
-                >
-                  {word.rank === -1 ? "?" : String(word.rank)}{" "}
-                  {/* Ensure it's a string for Badge content */}
-                </RankBadge>
-              }
-            />
-          ))
+          words.map((word) => {
+            const rankValue = word.rank <= 0 ? "?" : String(word.rank);
+
+            return (
+              <WordItem
+                key={word.id}
+                isNew={word.id === lastAddedWordId}
+                content={word.text}
+                contentLeft={
+                  <RankBadge
+                    view={
+                      word.rank <= 0
+                        ? "primary"
+                        : word.rank <= 5
+                          ? "warning"
+                          : word.rank <= 20
+                            ? "primary"
+                            : "secondary"
+                    }
+                    size="s"
+                    text={rankValue}
+                  />
+                }
+              />
+            );
+          })
         )}
       </WordsListContainer>
     </WordsContainer>

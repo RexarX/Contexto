@@ -6,11 +6,11 @@ import {
 } from "@salutejs/client";
 import { Container } from "@salutejs/plasma-ui";
 
-import "./App.css";
 import { ContextoGame } from "./pages/ContextoGame";
 import {
   AssistantAction,
   AssistantEvent,
+  AssistantSendData,
   GameState,
   AssistantEventStart,
 } from "./types";
@@ -132,11 +132,14 @@ export class App extends React.Component<Record<string, never>, AppState> {
         JSON.stringify(action, null, 2),
       ); // Detailed log
       switch (action.type) {
+        case "new_game":
+          return this.startNewGame();
+
         case "guess_word":
           console.log(
             "dispatchAssistantAction: case 'guess_word', action.word:",
             action.word,
-          ); // Log the word specifically
+          );
           if (action.word) {
             console.log("Making guess with word:", action.word);
             return this.makeGuess(action);
@@ -147,13 +150,13 @@ export class App extends React.Component<Record<string, never>, AppState> {
             // Optionally, provide feedback to the user via assistant.sendData if word is missing
             this.sendActionValue(
               "error",
-              "Не расслышала слово, повторите пожалуйста.",
+              "Не расслышал слово, повторите пожалуйста.",
             );
           }
           break;
 
-        case "new_game":
-          return this.startNewGame();
+        case "get_hint":
+          return Promise.resolve();
 
         default:
           console.error(`Unhandled action type: ${action.type}`);
@@ -163,20 +166,66 @@ export class App extends React.Component<Record<string, never>, AppState> {
     return Promise.resolve();
   }
 
+  startNewGame = async (): Promise<void> => {
+    try {
+      this.setState({
+        gameState: {
+          guessedWords: [],
+          gameOver: false,
+        },
+        feedbackMessage: undefined,
+      });
+
+      const response = await fetch(`${API_BASE_URL}/api/new-game`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        console.error("Error starting new game:", data.error);
+        this.setState({
+          feedbackMessage: {
+            text: `Ошибка при создании новой игры: ${data.error}`,
+            type: "error",
+          },
+        });
+        return;
+      }
+
+      // Store session_id in localStorage as fallback
+      if (data.session_id) {
+        localStorage.setItem("Contexto_session_id", data.session_id);
+      }
+
+      console.log("New game started with session:", data.session_id);
+    } catch (error) {
+      console.error("Error starting new game:", error);
+      this.setState({
+        feedbackMessage: {
+          text: "Ошибка при создании новой игры",
+          type: "error",
+        },
+      });
+    }
+  };
+
   makeGuess(action: AssistantAction): Promise<void> {
     console.log("makeGuess", action);
     if (action.word && !this.state.gameState.gameOver) {
-      // Ensure word is a string and not undefined
-      const word = String(action.word).trim().toLocaleLowerCase();
-      if (word) {
-        return this.guessWord(word);
+      if (action.word) {
+        return this.guessWord(action.word);
       }
     }
     return Promise.resolve();
   }
 
-  // Fetch from backend to check word and get ranking
   guessWord = async (word: string): Promise<void> => {
+    word = word.trim().toLocaleLowerCase();
     console.log("guessWord", word);
     try {
       const storedSessionId = localStorage.getItem("Contexto_session_id");
@@ -267,67 +316,17 @@ export class App extends React.Component<Record<string, never>, AppState> {
     }
   };
 
-  startNewGame = async (): Promise<void> => {
-    try {
-      this.setState({
-        gameState: {
-          guessedWords: [],
-          gameOver: false,
-        },
-        feedbackMessage: undefined,
-      });
-
-      const response = await fetch(`${API_BASE_URL}/api/new-game`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        console.error("Error starting new game:", data.error);
-        this.setState({
-          feedbackMessage: {
-            text: `Ошибка при создании новой игры: ${data.error}`,
-            type: "error",
-          },
-        });
-        return;
-      }
-
-      // Store session_id in localStorage as fallback
-      if (data.session_id) {
-        localStorage.setItem("Contexto_session_id", data.session_id);
-      }
-
-      console.log("New game started with session:", data.session_id);
-    } catch (error) {
-      console.error("Error starting new game:", error);
-      this.setState({
-        feedbackMessage: {
-          text: "Ошибка при создании новой игры",
-          type: "error",
-        },
-      });
-    }
-  };
-
   private sendActionValue(action_id: string, value: string): void {
-    const data = {
+    const data: AssistantSendData = {
       action: {
         action_id,
-        parameters: {
-          value,
-        },
+        parameters: { value },
       },
     };
-    const unsubscribe = this.assistant.sendData(data, (assistantData: any) => {
+
+    this.assistant.sendData(data, (assistantData: any) => {
       const { type, payload } = assistantData || {};
       console.log("sendData onData:", type, payload);
-      unsubscribe();
     });
   }
 

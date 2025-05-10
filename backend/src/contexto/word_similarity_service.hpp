@@ -20,8 +20,10 @@ public:
     return !word.empty() && std::find(dictionary_.begin(), dictionary_.end(), word) != dictionary_.end();
   }
 
+  std::string GetHintWord(std::string_view target_word, std::span<const std::string> guessed_words) const;
+
 private:
-  double CalculateSimilarity(std::string_view word1, std::string_view word2);
+  double CalculateSimilarity(std::string_view lhs, std::string_view rhs) const;
   void LoadWordEmbeddings();
   void LoadDictionary();
 

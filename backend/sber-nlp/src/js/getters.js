@@ -68,18 +68,6 @@ function get_last_guesses(request, count) {
   return [];
 }
 
-function get_closest_word(request) {
-  var items = get_items(request);
-  if (items && items.length > 0) {
-    // Sort by rank and get the closest one
-    items.sort(function (a, b) {
-      return a.number - b.number;
-    });
-    return items[0];
-  }
-  return null;
-}
-
 function is_game_over(request) {
   var gameState = get_game_state(request);
   return gameState.gameOver === true;

@@ -8,7 +8,6 @@ require: js/stats.js
 
 require: sc/guessWord.sc
 require: sc/newGame.sc
-require: sc/getHint.sc
 require: sc/rules.sc
 
 patterns:
@@ -20,20 +19,10 @@ theme: /
     state: Start
         q!: $regex</start>
         q!: (запусти|открой|вруби) [игру] [в] contexto
-        a: Игра Contesto началась! Попробуйте угадать секретное слово.
+        a: Игра Contexto началась! Попробуйте угадать секретное слово.
         script:
             newGame($context);
             addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
-
-    state: Rules
-        q!: [расскажи|объясни] [мне] [пожалуйста] [~какой] ~правило [~игра]
-        q!: как [в это] играть
-        q!: что [мне] [нужно] [надо] делать
-        q!: [я] не понимаю [как играть]
-
-        random:
-            a: В игре Contesto нужно угадать секретное слово. С каждой попыткой вы получаете подсказку - ваши слова отсортированы по схожести с секретным. Чем ближе слово к началу списка, тем оно ближе к секретному.
-            a: Правила игры Contesto: нужно угадать секретное слово. Каждое слово, которое вы называете, появляется в списке и сортируется по схожести с загаданным словом. Чем выше в списке, тем ближе к разгадке!
 
     state: CatchWord
         q: $String
@@ -45,13 +34,13 @@ theme: /
 
         script:
             var stats = getGameStats($context);
-            var message = getEncouragingMessage(stats);
 
             if (stats.gameOver) {
                 $reactions.answer("Вы уже выиграли эту игру! Скажите 'новая игра', чтобы начать заново.");
             } else if (stats.guessCount == 0) {
                 $reactions.answer("Вы еще не назвали ни одного слова. Просто скажите любое слово, чтобы начать игру.");
             } else {
+                var message = getEncouragingMessage(stats);
                 $reactions.answer("Вы уже проверили " + stats.guessCount + " слов. " + message);
             }
 
