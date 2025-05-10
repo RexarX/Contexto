@@ -1,36 +1,56 @@
 services:
   backend:
     build: .
+    container_name: contexto-backend
     volumes:
       - ./:/app
       - backend_build:/app/backend/build
-      - /app/frontend/node_modules # Don't mount host node_modules
+      - ./backend/assets:/app/backend/assets
+      - /app/frontend/node_modules
     environment:
       - TERM=xterm-color
     ports:
       - "8081:8080" # Changed external port to 8081 to avoid conflict
+    networks:
+      - app-network
     command: /bin/bash -c "cd backend && ./scripts/build.sh --type Release --compiler gcc --build-system ninja --no-tests && ./scripts/run.sh --type Release"
 
   frontend:
     build: .
+    container_name: contexto-frontend
     volumes:
-      - ./:/app
-      - /app/frontend/node_modules # Don't mount host node_modules
+      - ./backend:/app/backend
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      - ./frontend/.env:/app/frontend/.env
+      - ./frontend/.env.example:/app/frontend/.env.example
+      - ./frontend/package.json:/app/frontend/package.json
+      - ./frontend/package-lock.json:/app/frontend/package-lock.json
+      - ./frontend/tsconfig.json:/app/frontend/tsconfig.json
+      - ./frontend/tsconfig.node.json:/app/frontend/tsconfig.node.json
+      - ./frontend/vite.config.ts:/app/frontend/vite.config.ts
+      - ./frontend/.eslintrc.cjs:/app/frontend/.eslintrc.cjs
+      - ./frontend/env.d.ts:/app/frontend/env.d.ts
     environment:
       - TERM=xterm-color
       - HOST=0.0.0.0 # Allow external connections
+      - VITE_API_BASE_URL=http://localhost:8081 # Use localhost:8081 for browser access
     ports:
       - "3000:3000" # Frontend development server port
-    command: /bin/bash -c "cd frontend && npm run dev -- --host 0.0.0.0"
+    networks:
+      - app-network
+    command: /bin/bash -c "cd frontend && npm install && npm run dev -- --host 0.0.0.0"
     depends_on:
       - backend
 
   dev:
     build: .
+    container_name: contexto-dev
     volumes:
       - ./:/app
       - backend_build:/app/backend/build
-      - /app/frontend/node_modules # Don't mount host node_modules
+      - ./backend/assets:/app/backend/assets
+      - /app/frontend/node_modules
     environment:
       - TERM=xterm-color
       - HOST=0.0.0.0 # Allow external connections
@@ -38,10 +58,16 @@ services:
       - "8082:8080" # Changed external port to 8082 to avoid conflict
       - "8085:8085" # Monitor port
       - "3001:3000" # Changed frontend external port to 3001 to avoid conflict
+    networks:
+      - app-network
     working_dir: /app
     command: /bin/bash
     stdin_open: true
     tty: true
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   backend_build:

@@ -1,5 +1,6 @@
 import React from "react";
-import "../App.css";
+import { Button, TextField } from "@salutejs/plasma-ui";
+import styled from "styled-components";
 
 interface GuessInputProps {
   onGuess: (word: string) => void;
@@ -10,11 +11,39 @@ interface GuessInputState {
   guess: string;
 }
 
-export class GuessInput extends React.Component<GuessInputProps, GuessInputState> {
+const Form = styled.form`
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0 auto;
+`;
+
+const NewGameBtn = styled(Button)`
+  width: 100%;
+`;
+
+interface NewGameButtonProps {
+  children: React.ReactNode;
+  onClick: () => void;
+}
+
+export class GuessInput extends React.Component<
+  GuessInputProps,
+  GuessInputState
+> {
+  static NewGameButton: React.FC<NewGameButtonProps> = ({
+    children,
+    onClick,
+  }) => (
+    <NewGameBtn view="success" onClick={onClick}>
+      {children}
+    </NewGameBtn>
+  );
+
   constructor(props: GuessInputProps) {
     super(props);
     this.state = {
-      guess: '',
+      guess: "",
     };
   }
 
@@ -22,7 +51,7 @@ export class GuessInput extends React.Component<GuessInputProps, GuessInputState
     event.preventDefault();
     if (this.state.guess.trim() && !this.props.disabled) {
       this.props.onGuess(this.state.guess);
-      this.setState({ guess: '' });
+      this.setState({ guess: "" });
     }
   };
 
@@ -32,10 +61,8 @@ export class GuessInput extends React.Component<GuessInputProps, GuessInputState
 
   render(): React.ReactNode {
     return (
-      <form onSubmit={this.handleSubmit} className="guess-form">
-        <input
-          className="guess-input"
-          type="text"
+      <Form onSubmit={this.handleSubmit}>
+        <TextField
           placeholder="Введите слово"
           value={this.state.guess}
           onChange={this.handleChange}
@@ -43,14 +70,10 @@ export class GuessInput extends React.Component<GuessInputProps, GuessInputState
           required
           autoFocus
         />
-        <button 
-          type="submit" 
-          className="guess-button" 
-          disabled={this.props.disabled}
-        >
+        <Button type="submit" view="primary" disabled={this.props.disabled}>
           Угадать
-        </button>
-      </form>
+        </Button>
+      </Form>
     );
   }
 }

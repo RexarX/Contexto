@@ -16,7 +16,13 @@ GuessHandler::GuessHandler(const userver::components::ComponentConfig& config,
 }
 
 std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRequest& request,
-                                             userver::server::request::RequestContext&) const {
+                                             userver::server::request::RequestContext& context) const {
+  auto& response = request.GetHttpResponse();
+  response.SetHeader(std::string_view("Access-Control-Allow-Origin"), "*");
+  response.SetHeader(std::string_view("Access-Control-Allow-Methods"), "GET, POST, OPTIONS");
+  response.SetHeader(std::string_view("Access-Control-Allow-Headers"), "Content-Type");
+  response.SetHeader(std::string_view("Access-Control-Allow-Credentials"), "true");
+
   if (request.GetMethod() == userver::server::http::HttpMethod::kOptions) {
     request.SetResponseStatus(userver::server::http::HttpStatus::kOk);
     return "";
@@ -39,8 +45,7 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Invalid JSON format"));
     }
 
-    const auto guessed_word = json["word"].As<std::string>();
-
+    std::string guessed_word = json["word"].As<std::string>();
     if (guessed_word.empty()) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
       LOG_ERROR() << "No word provided";

@@ -1,9 +1,32 @@
-import React from 'react';
-import { GuessInput } from '../components/GuessInput';
-import { WordsList } from '../components/WordsList';
-import { Celebration } from '../components/Celebration';
-import { VoiceFeedback } from '../components/VoiceFeedback';
-import { Word, GameState } from '../types';
+import React from "react";
+import { GuessInput } from "../components/GuessInput";
+import { WordsList } from "../components/WordsList";
+import { Celebration } from "../components/Celebration";
+import { VoiceFeedback } from "../components/VoiceFeedback";
+import { GameState } from "../types";
+import { Container, Header, Headline1, Body1, Card } from "@salutejs/plasma-ui";
+import styled from "styled-components";
+
+const StyledHeader = styled(Header)`
+  text-align: center;
+  display: block;
+  margin-bottom: 1.5rem;
+  width: 100%; /* Ensure the header takes the full width */
+`;
+
+const StyledHeadline = styled(Headline1)`
+  margin-bottom: 0.5rem;
+  text-align: center; /* Explicitly center the headline text */
+  width: 100%;
+`;
+
+const StyledBody = styled(Body1)`
+  color: rgba(255, 255, 255, 0.6);
+  display: block;
+  margin-top: 0.5rem;
+  text-align: center; /* Center this text as well */
+  width: 100%;
+`;
 
 interface ContextoGameProps {
   gameState: GameState;
@@ -11,56 +34,52 @@ interface ContextoGameProps {
   onNewGame: () => void;
   feedbackMessage?: {
     text: string;
-    type: 'feedback' | 'error' | 'success';
+    type: "feedback" | "error" | "success";
   };
 }
 
-export const ContextoGame: React.FC<ContextoGameProps> = ({ 
-  gameState, 
-  onGuess, 
+export const ContextoGame: React.FC<ContextoGameProps> = ({
+  gameState,
+  onGuess,
   onNewGame,
-  feedbackMessage
+  feedbackMessage,
 }) => {
   const { guessedWords, gameOver, targetWord } = gameState;
 
   return (
-    <main className="container Contexto-game">
-      <header className="game-header">
-        <h1>Contexto</h1>
-        <p className="game-description">
-          Угадайте секретное слово. Слова в списке отсортированы по схожести с секретным.
-        </p>
-      </header>
-      
-      <WordsList 
-        words={guessedWords} 
-        gameOver={gameOver} 
-        targetWord={targetWord} 
-      />
-      
-      <div className="game-controls">
-        <GuessInput onGuess={onGuess} disabled={gameOver} />
-        
-        {gameOver && (
-          <button 
-            className="new-game-button"
-            onClick={onNewGame}
-          >
-            Новая игра
-          </button>
-        )}
-      </div>
+    <Container>
+      <Card style={{ padding: "2rem" }}>
+        <StyledHeader style={{ textAlign: "center", display: "block" }}>
+          <StyledHeadline>Contexto</StyledHeadline>
+        </StyledHeader>
+
+        <WordsList
+          words={guessedWords}
+          gameOver={gameOver}
+          targetWord={targetWord}
+        />
+
+        <div style={{ marginTop: "1rem" }}>
+          <GuessInput onGuess={onGuess} disabled={gameOver} />
+
+          {gameOver && (
+            <div style={{ marginTop: "1rem" }}>
+              <GuessInput.NewGameButton onClick={onNewGame}>
+                Новая игра
+              </GuessInput.NewGameButton>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {feedbackMessage && (
-        <VoiceFeedback 
+        <VoiceFeedback
           message={feedbackMessage.text}
           type={feedbackMessage.type}
         />
       )}
-      
-      {gameOver && targetWord && (
-        <Celebration word={targetWord} />
-      )}
-    </main>
+
+      {gameOver && targetWord && <Celebration word={targetWord} />}
+    </Container>
   );
 };

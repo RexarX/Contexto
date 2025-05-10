@@ -13,7 +13,6 @@ NC='\033[0m' # No Color
 # Determine script location and project root regardless of how the script is invoked
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
-SCRIPT_NAME="$(basename "$SCRIPT_PATH")"
 
 # Determine the actual backend directory (project root)
 if [[ "$SCRIPT_DIR" == */scripts ]]; then
@@ -40,7 +39,6 @@ BUILD_TYPE="Debug"
 BUILD_DIR="$PROJECT_ROOT/build"
 CONFIG_DIR="$PROJECT_ROOT/configs"
 STATIC_CONFIG="static_config.yaml"
-RUNTIME_CONFIG="config.yaml"
 LOG_LEVEL="debug"
 ARGS=()
 INTERACTIVE=0
@@ -110,7 +108,7 @@ select_build_type() {
     echo "1) Debug"
     echo "2) RelWithDebInfo"
     echo "3) Release"
-    
+
     local choice
     read -p "Enter your choice (1, 2, or 3): " choice
     case $choice in
@@ -122,7 +120,7 @@ select_build_type() {
             select_build_type
             ;;
     esac
-    
+
     print_info "Selected build type: $BUILD_TYPE"
 }
 
@@ -135,7 +133,7 @@ select_log_level() {
     echo "5) error"
     echo "6) critical"
     echo "7) none (no logging)"
-    
+
     local choice
     read -p "Enter your choice (1-7): " choice
     case $choice in
@@ -151,7 +149,7 @@ select_log_level() {
             select_log_level
             ;;
     esac
-    
+
     print_info "Selected log level: $LOG_LEVEL"
 }
 
@@ -160,22 +158,22 @@ select_config_file() {
     local config_var=$2   # The variable to set
     local default_value=$3
     local title_case="${config_type^}"  # Capitalize first letter
-    
+
     # Default location
     local config_dir="${CONFIG_DIR}"
-    
+
     # List available config files
     print_info "Select ${title_case} Config File:"
-    
+
     # Create the config directory if it doesn't exist
     if [[ ! -d "$config_dir" ]]; then
         mkdir -p "$config_dir"
         print_warning "Created config directory: $config_dir"
     fi
-    
+
     # Find all .yaml files in the config directory
     local yaml_files=("$config_dir"/*.yaml "$config_dir"/*.yml)
-    
+
     if [[ ${#yaml_files[@]} -eq 0 || ! -f "${yaml_files[0]}" ]]; then
         print_warning "No YAML files found in $config_dir"
         print_info "Using default: $default_value"
@@ -183,7 +181,7 @@ select_config_file() {
         eval "$config_var=\"$default_value\""
         return
     fi
-    
+
     # Print the list of files
     local i=1
     local default_index=1
@@ -198,19 +196,19 @@ select_config_file() {
             ((i++))
         fi
     done
-    
+
     # Add option to create a new file
     echo "$i) Create a new file"
-    
+
     # Ask the user to select a file
     local max_choice=$i
     read -p "Enter your choice (1-$max_choice) [default: $default_index]: " choice
-    
+
     # Use default if empty
     if [[ -z "$choice" ]]; then
         choice=$default_index
     fi
-    
+
     # Handle the selection
     if [[ "$choice" -eq "$max_choice" ]]; then
         # Create a new file
@@ -226,7 +224,7 @@ select_config_file() {
     elif [[ "$choice" -ge 1 && "$choice" -lt "$max_choice" ]]; then
         local selected_index=$(($choice - 1))
         local selected_file=""
-        
+
         # Find the selected file
         i=0
         for file in "${yaml_files[@]}"; do
@@ -238,7 +236,7 @@ select_config_file() {
                 ((i++))
             fi
         done
-        
+
         print_info "Selected: $selected_file"
         # Set the variable using indirect reference
         eval "$config_var=\"$selected_file\""
@@ -301,10 +299,10 @@ find_executable() {
     local project_name=$(grep -m 1 "set(PROJECT_NAME" "$PROJECT_ROOT/CMakeLists.txt" | cut -d ' ' -f2 | tr -d ')' | tr -d '\r\n')
 
     local exe_path="$PROJECT_ROOT/bin/$BUILD_TYPE/$project_name"
-    
+
     # Print debug message to stderr so it doesn't get captured in command substitution
     print_info "Looking for executable at: $exe_path" >&2
-    
+
     if [[ -f "$exe_path" ]]; then
         # Only output the path, nothing else
         echo "$exe_path"
@@ -319,23 +317,23 @@ list_available_build_types() {
     local project_name=$(grep -m 1 "set(PROJECT_NAME" "$PROJECT_ROOT/CMakeLists.txt" | cut -d ' ' -f2 | tr -d ')' | tr -d '\r\n')
     local bin_dir="$PROJECT_ROOT/bin"
     local found_types=()
-    
+
     print_info "Project name from CMakeLists.txt: '$project_name'" >&2
-    
+
     # Check if bin directory exists
     if [[ ! -d "$bin_dir" ]]; then
         print_warning "bin directory not found at $bin_dir" >&2
         return 1
     fi
-    
+
     print_info "Checking for build types in: $bin_dir" >&2
-    
+
     # Look for subdirectories
     for dir_entry in "$bin_dir"/*; do
         if [[ -d "$dir_entry" ]]; then
             local dir_name=$(basename "$dir_entry")
             print_info "Checking directory: $dir_name" >&2
-            
+
             # Check for executable in this directory
             if [[ -f "$dir_entry/$project_name" ]]; then
                 print_info "Found executable in $dir_name" >&2
@@ -346,7 +344,7 @@ list_available_build_types() {
             fi
         fi
     done
-    
+
     # Return the found types - just list each once
     if [[ ${#found_types[@]} -gt 0 ]]; then
         # Use printf '%s\n' to output each type on a new line, then sort -u to remove duplicates
@@ -358,14 +356,14 @@ list_available_build_types() {
 
 select_from_available_build_types() {
     local -a types=("$@")
-    
+
     print_info "Please select a build type:"
     local i=1
     for type in "${types[@]}"; do
         echo "$i) $type"
         ((i++))
     done
-    
+
     local choice
     local max=${#types[@]}
     while true; do
@@ -376,20 +374,20 @@ select_from_available_build_types() {
         fi
         print_warning "Invalid choice. Please enter a number between 1 and $max."
     done
-    
+
     print_info "Selected build type: $BUILD_TYPE"
 }
 
 check_configs() {
     local static_config_path="$CONFIG_DIR/$STATIC_CONFIG"
-    
+
     if [[ ! -f "$static_config_path" ]]; then
         print_warning "Static config file not found: $static_config_path"
         print_warning "Creating a default static_config.yaml file"
-        
+
         # Create configs directory if it doesn't exist
         mkdir -p "$CONFIG_DIR"
-        
+
         # Create a basic static config
         cat > "$static_config_path" << EOL
 components_manager:
@@ -427,17 +425,17 @@ components_manager:
           file_path: '@stderr'
           level: info
           overflow_behavior: discard
-        
+
         session-logger:
           file_path: 'logs/session.log'
           level: debug
           overflow_behavior: discard
-        
+
         http-logger:
           file_path: 'logs/http.log'
           level: info
           overflow_behavior: discard
-        
+
         error-logger:
           file_path: 'logs/errors.log'
           level: error
@@ -448,11 +446,11 @@ components_manager:
       fs-task-processor: fs-task-processor
       user-agent: Contexto/1.0
       dns_resolver: async
-    
+
     # DNS Client
     dns-client:
       fs-task-processor: fs-task-processor
-    
+
     # API handlers
     Contexto-new-game-handler:
       path: /api/new-game
@@ -474,7 +472,7 @@ components_manager:
       log-level: INFO
 EOL
     fi
-    
+
     # Return only the static config path
     echo "$static_config_path"
 }
@@ -482,16 +480,16 @@ EOL
 main() {
     print_info "Contexto Backend Run Script"
     print_info "==========================="
-    
+
     parse_args "$@"
-    
+
     # Interactive mode - if running in a terminal and interactive flag was set
     if [[ $INTERACTIVE -eq 1 ]]; then
         print_info "Running in interactive mode"
-        
+
         # Read available types into an array, one per line
         mapfile -t available_types < <(list_available_build_types)
-        
+
         if [[ ${#available_types[@]} -eq 0 ]]; then
             print_error "No built executables found in bin/ directory."
             print_warning "Please build the project first with ./scripts/build.sh"
@@ -505,11 +503,11 @@ main() {
             fi
         fi
     fi
-        
+
     # Check config files - but only care about static config
     static_config=$(check_configs)
     print_info "Using static config: $static_config"
-    
+
     # Find executable
     local executable=$(find_executable)
     if [[ $? -ne 0 ]]; then
@@ -534,6 +532,11 @@ main() {
         }
     fi
 
+    executable_dir="$(dirname "$executable")"
+    print_info "Changing to executable directory: $executable_dir"
+    cd "$executable_dir"
+    print_info "Working directory changed to: $(pwd)"
+
     # Build command array
     local cmd=("$executable")
 
@@ -555,7 +558,7 @@ main() {
     # Execute
     "${cmd[@]}"
     local exit_code=$?
-    
+
     if [[ $exit_code -ne 0 ]]; then
         print_error "Executable exited with code: $exit_code"
         exit $exit_code

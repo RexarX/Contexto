@@ -42,7 +42,7 @@ export interface AssistantSmartAppData<T = any> {
 }
 
 export interface AssistantSmartAppError {
-  type: 'error';
+  type: "error";
   error: {
     code: string;
     message: string;
@@ -50,12 +50,12 @@ export interface AssistantSmartAppError {
 }
 
 export type AssistantEventStart = {
-  type: 'start';
+  type: "start";
   payload?: any;
 };
 
 export type AssistantEventCharacter = {
-  type: 'character';
+  type: "character";
   character?: {
     id: string;
     [key: string]: any;
@@ -63,12 +63,12 @@ export type AssistantEventCharacter = {
 };
 
 export type AssistantEventInsets = {
-  type: 'insets';
+  type: "insets";
   insets?: {
     [key: string]: any;
   };
 };
 
 export type AssistantSmartAppCallback = (
-  data: AssistantSmartAppData | AssistantSmartAppError
+  data: AssistantSmartAppData | AssistantSmartAppError,
 ) => void;

@@ -6,11 +6,11 @@ theme: /
         q!: [~давать] (~играть|~сыграть) [~еще] [~раз|~один|~разок]
         q!: ~перезапустить [~игра]
         q!: ~сброс
-        
+
         script:
             log('newGame: context: ' + JSON.stringify($context));
             newGame($context);
-        
+
         random:
             a: Начинаем новую игру!
             a: Новая игра началась!

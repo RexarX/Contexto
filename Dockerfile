@@ -106,6 +106,10 @@ RUN hash -r
 # Set working directory
 WORKDIR /app
 
+# Copy package.json files first (for better caching)
+COPY frontend/package*.json /app/frontend/
+RUN cd /app/frontend && npm install --no-progress
+
 # Copy the project source code
 COPY . /app/
 
@@ -121,8 +125,5 @@ RUN echo "#!/bin/bash\necho 'Dependencies already installed by Dockerfile'\nexit
 VOLUME ["/app/backend/build"]
 VOLUME ["/app/frontend/node_modules"]
 
-# Install frontend dependencies
-RUN cd /app/frontend && npm install
-
-# Default build command - Now with explicit parameters to avoid interactive prompts
+# Default build command
 CMD cd /app/backend && ./scripts/build.sh --type Release --compiler gcc --build-system ninja --no-tests

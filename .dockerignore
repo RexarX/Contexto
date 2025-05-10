@@ -3,4 +3,3 @@ backend/build/
 .github/
 .vscode/
 **/.cache/
-frontend/node_modules/
