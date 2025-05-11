@@ -75,6 +75,7 @@ RUN apt-get update && apt-get install -y \
     libxxhash-dev \
     libyaml-cpp-dev \
     libzstd-dev \
+    libeigen3-dev \
     netbase \
     ninja-build \
     postgresql-server-dev-14 \

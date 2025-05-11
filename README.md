@@ -51,7 +51,11 @@ Contexto is a word-guessing game where players have to find the secret word with
 - Backend:
 
   - [userver](https://github.com/userver-framework/userver) - High-performance C++ microservice framework
+  - [Eigen](https://github.com/PX4/eigen) - C++ template library for linear algebra: matrices, vectors, numerical solvers, and related algorithms.
+
   - Various system libraries (automatically installed via `install-deps.sh` or Docker)
+
+  - Semantic models. They must be downloaded separately and extracted into backend/assets directory. Model must have Universal Tags tageset and use Continuous Skipgram algorithm. Default model that is currently used(also must be downloaded) is [ruwikiruscorpora-nobigrams_upos_skipgram_300_5_2018](https://rusvectores.org/static/models/rusvectores4/unigrams/ruwikiruscorpora-nobigrams_upos_skipgram_300_5_2018.vec.gz) from [RusVectōrēs](https://rusvectores.org).
 
 - Frontend:
   - React-based web application

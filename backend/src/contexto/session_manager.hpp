@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pch.hpp"
+#include <pch.hpp>
 
 #include <userver/components/loggable_component_base.hpp>
 #include <userver/engine/shared_mutex.hpp>

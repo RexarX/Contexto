@@ -1,5 +1,4 @@
 file(GLOB_RECURSE OBJ_SOURCES
-    hello/*.cpp
     contexto/*.cpp
     contexto/models/*.cpp
     contexto/repositories/*.cpp
@@ -32,8 +31,16 @@ target_precompile_headers(${PROJECT_NAME}_objs PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:pch.hpp>
 )
 
+find_package(Eigen3 REQUIRED)
+
+target_link_libraries(${PROJECT_NAME}_objs PRIVATE
+    userver-core
+    Eigen3::Eigen
+)
+
 target_include_directories(${PROJECT_NAME}_objs PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 target_compile_definitions(${PROJECT_NAME}_objs PRIVATE
@@ -41,7 +48,7 @@ target_compile_definitions(${PROJECT_NAME}_objs PRIVATE
         DEBUG_MODE
     >
     $<$<CONFIG:RelWithDebInfo>:
-        RELEASE_WITH_BEDUG_INFO_MODE
+        RELEASE_WITH_DEDUG_INFO_MODE
     >
     $<$<CONFIG:Release>:
         RELEASE_MODE
@@ -112,12 +119,6 @@ elseif(ENABLE_SIMD_AVX2)
     )
 endif()
 
-find_package(PkgConfig REQUIRED)
-
-target_link_libraries(${PROJECT_NAME}_objs PRIVATE
-    userver-core
-)
-
 add_executable(${PROJECT_NAME} main.cpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -130,13 +131,15 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:pch.hpp>
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
 target_link_libraries(${PROJECT_NAME} PRIVATE
     userver-core
+    Eigen3::Eigen
     ${PROJECT_NAME}_objs
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})

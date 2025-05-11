@@ -36,6 +36,10 @@ bin/
 build/
 out/
 
+# Test reports
+test-reports/
+*.xml
+
 # Dependency directories
 node_modules/
 
@@ -50,3 +54,6 @@ frontend/.env
 
 # Log files
 *.log
+
+# Assets
+assets/

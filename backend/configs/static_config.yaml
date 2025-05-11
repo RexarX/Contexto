@@ -20,11 +20,12 @@ components_manager:
       max-sessions: 10000
 
     tests-control:
+      load-enabled: true
       path: /tests/{action}
       task_processor: main-task-processor
       method: POST
 
-    testsuite-support: {}
+    testsuite-support:
 
     logging:
       fs-task-processor: fs-task-processor

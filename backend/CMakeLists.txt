@@ -34,8 +34,18 @@ if(ENABLE_UNITY_BUILD)
 endif()
 
 add_subdirectory(third-party)
+
+userver_setup_environment()
+
 add_subdirectory(src)
 
 if(BUILD_TESTS)
     add_subdirectory(tests)
+endif()
+
+# Now that all targets are created, we can set up the testsuite
+if(BUILD_TESTS)
+    if(COMMAND add_contexto_testsuite)
+        #add_contexto_testsuite()
+    endif()
 endif()

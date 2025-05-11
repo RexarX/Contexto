@@ -303,6 +303,10 @@ parse_args() {
                 RUN_AFTER_BUILD=1
                 shift
                 ;;
+            -no-run|--no-run)
+                RUN_AFTER_BUILD=0
+                shift
+                ;;
             *)
                 print_error "Unknown option: $1"
                 print_help
@@ -531,8 +535,8 @@ main() {
         print_info "Executables can be found in: $exe_path"
     fi
 
-    # Ask about running the application if not specified through command line
-    if [[ "$RUN_AFTER_BUILD" -ne 1 ]]; then
+    # Don't prompt to run the application if --no-run was specified or we're building tests
+    if [[ "$RUN_AFTER_BUILD" -ne 1 && "$BUILD_TESTS" -ne 1 ]]; then
         if ask_yes_no "Do you want to run the application?" "y"; then
             RUN_AFTER_BUILD=1
         fi

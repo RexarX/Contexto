@@ -40,8 +40,27 @@ services:
     networks:
       - app-network
     command: /bin/bash -c "cd frontend && npm install && npm run dev -- --host 0.0.0.0"
-    depends_on:
-      - backend
+
+  test:
+    build: .
+    container_name: contexto-test
+    cap_add:
+      - SYS_PTRACE
+      - SYS_NICE
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - ./:/app
+      - backend_build:/app/backend/build
+      - ./backend/assets:/app/backend/assets
+      - ./test-reports:/app/test-reports
+    environment:
+      - TERM=xterm-color
+      - CI=true # Mark as running in CI environment
+      - BUILD_TYPE=Debug # Default build type, can be overridden
+    networks:
+      - app-network
 
   dev:
     build: .

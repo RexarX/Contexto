@@ -10,7 +10,7 @@ namespace contexto {
 GuessHandler::GuessHandler(const userver::components::ComponentConfig& config,
                            const userver::components::ComponentContext& context)
     : HttpHandlerBase(config, context),
-      similarity_service_(std::make_shared<WordSimilarityService>(config, context)),
+      similarity_service_(std::make_shared<WordSimilarityService>()),
       session_manager_(context.FindComponent<SessionManager>()) {
   LOG_INFO() << "GuessHandler initialized";
 }
