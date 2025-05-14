@@ -19,6 +19,13 @@ components_manager:
     session-manager:
       max-sessions: 10000
 
+    word-dictionary:
+      embeddings-path: assets/ruwikiruscorpora-nobigrams_upos_skipgram_300_5_2018.vec
+      embeddings-preferred-word-type: any
+      dictionary-path: assets/small_russian_nouns.txt
+      max-dictionary-words: 0
+      dictionary-preferred-word-type: noun
+
     tests-control:
       load-enabled: true
       path: /tests/{action}
@@ -36,17 +43,17 @@ components_manager:
           overflow_behavior: discard
 
         session-logger:
-          file_path: "logs/session.log"
+          file_path: logs/session.log
           level: debug
           overflow_behavior: discard
 
         http-logger:
-          file_path: "logs/http.log"
+          file_path: logs/http.log
           level: info
           overflow_behavior: discard
 
         error-logger:
-          file_path: "logs/errors.log"
+          file_path: logs/errors.log
           level: error
           overflow_behavior: discard
 

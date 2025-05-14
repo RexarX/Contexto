@@ -56,4 +56,4 @@ frontend/.env
 *.log
 
 # Assets
-assets/
+*.vec

@@ -22,7 +22,7 @@ void SessionManager::CleanupSessions() {
   }
 }
 
-void SessionManager::SetTargetWord(const std::string& session_id, std::string_view word_with_pos) {
+void SessionManager::SetTargetWord(const std::string& session_id, std::string_view target_word) {
   std::lock_guard lock(mutex_);
   if (game_sessions_.size() >= max_sessions_) {
     LOG_WARNING() << "Session limit reached, cleaning up old sessions";
@@ -31,7 +31,7 @@ void SessionManager::SetTargetWord(const std::string& session_id, std::string_vi
     mutex_.lock();
   }
 
-  game_sessions_[session_id] = word_with_pos;
+  game_sessions_[session_id] = target_word;
 }
 
 std::vector<std::string_view> SessionManager::GetGuessedWords(const std::string& session_id) const {

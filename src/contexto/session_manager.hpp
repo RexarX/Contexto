@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/dictionary_word.hpp"
+#include <pch.hpp>
 
 #include <userver/components/loggable_component_base.hpp>
 #include <userver/engine/shared_mutex.hpp>
@@ -10,12 +10,6 @@ namespace contexto {
 struct GuessInfo {
   std::string_view word;
   int rank = -1;
-};
-
-struct TargetWord {
-  std::string_view word_with_pos;
-  std::string_view word = word_with_pos;
-  models::WordType word_type = models::WordType::kUnknown;
 };
 
 class SessionManager final : public userver::components::LoggableComponentBase {
@@ -43,7 +37,7 @@ public:
     guesses.push_back(info);
   }
 
-  void SetTargetWord(const std::string& session_id, std::string_view word_with_pos);
+  void SetTargetWord(const std::string& session_id, std::string_view target_word);
 
   std::string_view GetTargetWord(const std::string& session_id) const {
     std::shared_lock lock(mutex_);
@@ -60,7 +54,7 @@ public:
 
 private:
   mutable userver::engine::SharedMutex mutex_;
-  std::unordered_map<std::string, std::string_view> game_sessions_;
+  std::unordered_map<std::string, std::string> game_sessions_;
   size_t max_sessions_ = 0;
 
   std::unordered_map<std::string, std::vector<GuessInfo>> session_guesses_;

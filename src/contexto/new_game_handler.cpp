@@ -39,18 +39,10 @@ std::string NewGameHandler::HandleRequestThrow(const userver::server::http::Http
       }
     }
 
-    const models::DictionaryWord* target_word = dictionary_.GenerateNewTargetWord();
-    if (!target_word) {
-      request.SetResponseStatus(userver::server::http::HttpStatus::kInternalServerError);
-      LOG_ERROR() << "Failed to generate target word";
-      return userver::formats::json::ToString(
-          userver::formats::json::MakeObject("error", "Could not create game - please try again later"));
-    }
+    const std::string_view target_word = dictionary_.GenerateNewTargetWord();
+    LOG_INFO() << "New game created with session " << session_id << " and target word: " << target_word;
 
-    LOG_INFO() << "New game created with session " << session_id << " and target word: '" << target_word->word_with_pos
-               << "'";
-
-    session_manager_.SetTargetWord(session_id, target_word->word_with_pos);
+    session_manager_.SetTargetWord(session_id, target_word);
 
     const auto response = userver::formats::json::MakeObject("success", true, "session_id", session_id);
 

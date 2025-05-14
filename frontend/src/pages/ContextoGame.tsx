@@ -4,7 +4,7 @@ import { WordsList } from "../components/WordsList";
 import { Celebration } from "../components/Celebration";
 import { VoiceFeedback } from "../components/VoiceFeedback";
 import { GameState } from "../types";
-import { Container, Header, Headline1, Body1, Card } from "@salutejs/plasma-ui";
+import { Container, Header, Headline1, Card } from "@salutejs/plasma-ui";
 import styled from "styled-components";
 
 const StyledHeader = styled(Header)`

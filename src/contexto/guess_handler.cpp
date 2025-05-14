@@ -39,7 +39,6 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
     userver::formats::json::Value json;
     try {
       json = userver::formats::json::FromString(body);
-
     } catch (const userver::formats::json::Exception& e) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
       LOG_ERROR() << "Invalid JSON: " << e.what();
@@ -64,14 +63,14 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
     // Get target word for this session
     if (!session_manager_.HasSession(session_id)) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
-      LOG_ERROR() << "Session " << "'" << session_id << "'" << " not found in session manager";
+      LOG_ERROR() << "Session " << session_id << " not found in session manager";
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Invalid game session"));
     }
 
-    const std::string_view target_word_with_pos = session_manager_.GetTargetWord(session_id);
+    const std::string_view target_word = session_manager_.GetTargetWord(session_id);
     if (!dictionary_.ValidateWord(guessed_word)) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
-      LOG_ERROR() << "Unknown word submitted: '" << guessed_word << "'";
+      LOG_INFO() << "Unknown word submitted: " << guessed_word;
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Invalid word"));
     }
 
@@ -84,29 +83,14 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
     // }
 
     // const auto& result = similar_words.front();
-    const auto temp = dictionary_.GetDictionary().GetMostSimilarWords(target_word_with_pos, 100);
-    std::ostringstream ss;
-    ss << "Most similar words to target '" << target_word_with_pos << "': ";
-    int count = 0;
-    for (const auto& value : temp) {
-      if (++count > 10) break;
-      ss << "'" << value.first->word_with_pos << "'" << " (sim: " << value.second << "); ";
-    }
-
-    LOG_INFO() << ss.str();
-
-    const int rank = dictionary_.CalculateRank(guessed_word, target_word_with_pos);
-    if (rank < 0) {
-      request.SetResponseStatus(userver::server::http::HttpStatus::kInternalServerError);
-      constexpr std::string_view error = "Failed to calculate rank";
-      LOG_ERROR() << "Error processing guess: " << error;
-      return userver::formats::json::ToString(userver::formats::json::MakeObject("error", error));
-    }
+    const int rank = dictionary_.CalculateRank(guessed_word, target_word);
+    const bool is_correct = (guessed_word == target_word);
 
     const auto response =
-        userver::formats::json::MakeObject("word", guessed_word, "rank", rank, "correct", (rank == 1 ? "yes" : "no"));
+        userver::formats::json::MakeObject("word", guessed_word, "rank", rank, "correct", is_correct);
 
-    LOG_INFO() << "Guess: " << guessed_word << ", Rank: " << rank << ", Correct: " << (rank == 1 ? "yes" : "no");
+    LOG_INFO() << "Guess: " << guessed_word << ", Rank: " << rank
+               << ", Correct: " << (rank == 1 ? "yes" : "no");
 
     session_manager_.AddGuess(session_id, std::move(guessed_word), rank);
 
