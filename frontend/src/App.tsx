@@ -23,26 +23,41 @@ interface AppState {
   };
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (window.location.hostname === "localhost"
-    ? "http://localhost:8081"
-    : "http://backend:8080");
+// Improved API base URL resolution
+const API_BASE_URL = (() => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) return envUrl;
+
+  // Detect if we're running on HTTPS and adjust the backend URL accordingly
+  const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+
+  if (window.location.hostname === "localhost") {
+    return `${protocol}//localhost:8081`;
+  } else {
+    // Use same protocol as current page to avoid mixed content issues
+    return `${protocol}//${window.location.hostname}:8080`;
+  }
+})();
 
 const initializeAssistant = (getState: () => AssistantAppState) => {
-  if (import.meta.env.DEV) {
-    return createSmartappDebugger({
-      token: import.meta.env.VITE_APP_TOKEN || "",
-      initPhrase: `Запусти ${import.meta.env.VITE_APP_SMARTAPP}`,
-      getState,
-      nativePanel: {
-        defaultText: "Попробуй угадать слово",
-        screenshotMode: false,
-        tabIndex: -1,
-      },
-    });
-  } else {
-    return createAssistant({ getState });
+  try {
+    if (import.meta.env.DEV) {
+      return createSmartappDebugger({
+        token: import.meta.env.VITE_APP_TOKEN || "",
+        initPhrase: `Запусти ${import.meta.env.VITE_APP_SMARTAPP}`,
+        getState,
+        nativePanel: {
+          defaultText: "Попробуй угадать слово",
+          screenshotMode: false,
+          tabIndex: -1,
+        },
+      });
+    } else {
+      return createAssistant({ getState });
+    }
+  } catch (error) {
+    console.warn("Failed to initialize assistant:", error);
+    return null;
   }
 };
 
@@ -60,43 +75,22 @@ export class App extends React.Component<Record<string, never>, AppState> {
       },
     };
 
-    // Try to initialize the assistant, but make it optional
+    // Try to initialize assistant, but don't fail if it doesn't work
     try {
       this.assistant = initializeAssistant(() => this.getStateForAssistant());
 
       if (this.assistant) {
-        this.assistant.on("data", (event: AssistantEvent) => {
-          console.log(`assistant.on(data)`, event);
-          if (event.type === "character") {
-            console.log(
-              `assistant.on(data): character: "${event.character?.id}"`,
-            );
-          } else if (event.type === "insets") {
-            console.log(`assistant.on(data): insets`);
-          } else if (event.action) {
-            this.dispatchAssistantAction(event.action);
-          }
-        });
-
-        this.assistant.on("start", ((event: AssistantEventStart) => {
-          const initialData = this.assistant?.getInitialData();
-          console.log(`assistant.on(start)`, event, initialData);
-        }) as any);
-
+        this.assistant.on("data", this.handleAssistantData);
+        this.assistant.on("start", this.handleAssistantStart);
         this.assistant.on("command", (event) => {
           console.log(`assistant.on(command)`, event);
         });
-
         this.assistant.on("error", (event) => {
           console.log(`assistant.on(error)`, event);
         });
-
-        this.assistant.on("tts", (event) => {
-          console.log(`assistant.on(tts)`, event);
-        });
       }
     } catch (error) {
-      console.warn("Failed to initialize assistant:", error);
+      console.warn("Error setting up assistant:", error);
       this.assistant = null;
     }
   }
@@ -105,6 +99,30 @@ export class App extends React.Component<Record<string, never>, AppState> {
     // Start a new game as soon as the component mounts, regardless of assistant
     this.startNewGame();
   }
+
+  handleAssistantData = (event: AssistantEvent) => {
+    console.log(`assistant.on(data)`, event);
+    if (event.type === "character") {
+      console.log(`assistant.on(data): character: "${event.character?.id}"`);
+    } else if (event.type === "insets") {
+      console.log(`assistant.on(data): insets`);
+    } else if (event.action) {
+      this.dispatchAssistantAction(event.action);
+    }
+  };
+
+  handleAssistantStart = ((event: AssistantEventStart) => {
+    console.log(`assistant.on(start)`, event);
+
+    if (this.assistant) {
+      try {
+        const initialData = this.assistant.getInitialData();
+        console.log(`assistant initial data:`, initialData);
+      } catch (error) {
+        console.warn("Could not get initial data:", error);
+      }
+    }
+  }) as any;
 
   getStateForAssistant(): AssistantAppState {
     console.log("getStateForAssistant: this.state:", this.state);
@@ -142,7 +160,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
       console.log(
         "dispatchAssistantAction: Received action:",
         JSON.stringify(action, null, 2),
-      ); // Detailed log
+      );
       switch (action.type) {
         case "new_game":
           return this.startNewGame();
@@ -159,7 +177,6 @@ export class App extends React.Component<Record<string, never>, AppState> {
             console.warn(
               "dispatchAssistantAction: 'guess_word' action received without a word.",
             );
-            // Optionally, provide feedback to the user via assistant.sendData if word is missing
             this.sendActionValue(
               "error",
               "Не расслышал слово, повторите пожалуйста.",
@@ -187,6 +204,8 @@ export class App extends React.Component<Record<string, never>, AppState> {
         },
         feedbackMessage: undefined,
       });
+
+      console.log(`Fetching from: ${API_BASE_URL}/api/new-game`);
 
       const response = await fetch(`${API_BASE_URL}/api/new-game`, {
         method: "POST",
@@ -219,7 +238,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
       console.error("Error starting new game:", error);
       this.setState({
         feedbackMessage: {
-          text: "Ошибка при создании новой игры",
+          text: "Ошибка при создании новой игры. Пожалуйста, попробуйте позже.",
           type: "error",
         },
       });
@@ -267,8 +286,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
         return;
       }
 
-      console.log("Backend response for guess:", data); // Log the whole data object
-      console.log("Type of data.rank:", typeof data.rank, "Value:", data.rank); // Check type and value
+      console.log("Backend response for guess:", data);
 
       // Ensure rank is a number
       const rankAsNumber = parseInt(String(data.rank), 10);
@@ -348,17 +366,21 @@ export class App extends React.Component<Record<string, never>, AppState> {
       return;
     }
 
-    const data: AssistantSendData = {
-      action: {
-        action_id,
-        parameters: { value },
-      },
-    };
+    try {
+      const data: AssistantSendData = {
+        action: {
+          action_id,
+          parameters: { value },
+        },
+      };
 
-    this.assistant.sendData(data, (assistantData: any) => {
-      const { type, payload } = assistantData || {};
-      console.log("sendData onData:", type, payload);
-    });
+      this.assistant.sendData(data, (assistantData: any) => {
+        const { type, payload } = assistantData || {};
+        console.log("sendData onData:", type, payload);
+      });
+    } catch (error) {
+      console.warn("Error sending action to assistant:", error);
+    }
   }
 
   render(): React.ReactNode {
@@ -366,7 +388,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
     return (
       <div
         style={{
-          paddingBottom: "70px", // Add padding at bottom of overall app
+          paddingBottom: "100px", // Add even more padding at bottom of overall app
           minHeight: "100vh",
         }}
       >
