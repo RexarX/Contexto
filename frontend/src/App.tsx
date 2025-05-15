@@ -23,19 +23,19 @@ interface AppState {
   };
 }
 
-// Improved API base URL resolution
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) return envUrl;
 
-  // Detect if we're running on HTTPS and adjust the backend URL accordingly
-  const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+  // Always use the same protocol as the current page
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
 
-  if (window.location.hostname === "localhost") {
-    return `${protocol}//localhost:8081`;
+  if (hostname === "localhost") {
+    return `${protocol}//localhost:8080`;
   } else {
-    // Use same protocol as current page to avoid mixed content issues
-    return `${protocol}//${window.location.hostname}:8080`;
+    // Use the same host and protocol for the API, as Nginx will handle the proxying
+    return `${protocol}//${hostname}`;
   }
 })();
 
@@ -215,10 +215,6 @@ export class App extends React.Component<Record<string, never>, AppState> {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
-
       const data = await response.json();
 
       if (data.error) {
@@ -242,7 +238,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
       console.error("Error starting new game:", error);
       this.setState({
         feedbackMessage: {
-          text: "Ошибка при создании новой игры. Пожалуйста, попробуйте позже.",
+          text: "Ошибка при создании новой игры. Пожалуйста, проверьте подключение к серверу.",
           type: "error",
         },
       });

@@ -10,6 +10,37 @@
     </head>
     <body>
         <div id="root"></div>
+        <script>
+            // Prevent media session errors in browsers that don't support it fully
+            if ("mediaSession" in navigator) {
+                try {
+                    // Only register handlers that are definitely supported
+                    const supportedActions = [
+                        "play",
+                        "pause",
+                        "seekbackward",
+                        "seekforward",
+                        "previoustrack",
+                        "nexttrack",
+                    ];
+
+                    supportedActions.forEach((action) => {
+                        try {
+                            navigator.mediaSession.setActionHandler(
+                                action,
+                                () => {},
+                            );
+                        } catch (e) {
+                            console.warn(
+                                `Media session action '${action}' is not supported`,
+                            );
+                        }
+                    });
+                } catch (e) {
+                    console.warn("Media Session API error:", e);
+                }
+            }
+        </script>
         <script type="module" src="/src/main.tsx"></script>
     </body>
 </html>
