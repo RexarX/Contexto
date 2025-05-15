@@ -78,7 +78,6 @@ RUN apt-get update && apt-get install -y \
     libeigen3-dev \
     netbase \
     ninja-build \
-    postgresql-server-dev-14 \
     protobuf-compiler-grpc \
     python3-dev \
     python3-jinja2 \
