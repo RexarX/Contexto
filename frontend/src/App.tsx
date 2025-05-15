@@ -215,6 +215,10 @@ export class App extends React.Component<Record<string, never>, AppState> {
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.error) {
@@ -268,7 +272,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
         },
         body: JSON.stringify({
           word,
-          session_id: storedSessionId, // Include session_id in the request body as fallback
+          session_id: storedSessionId,
         }),
         credentials: "include",
       });

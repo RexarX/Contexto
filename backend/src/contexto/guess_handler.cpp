@@ -18,9 +18,17 @@ GuessHandler::GuessHandler(const userver::components::ComponentConfig& config,
 std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRequest& request,
                                              userver::server::request::RequestContext&) const {
   auto& http_response = request.GetHttpResponse();
-  http_response.SetHeader(std::string_view("Access-Control-Allow-Origin"), "*");
+
+  // Set proper CORS headers
+  const auto origin = request.GetHeader("Origin");
+  if (!origin.empty()) {
+    http_response.SetHeader(std::string_view("Access-Control-Allow-Origin"), origin);
+  } else {
+    http_response.SetHeader(std::string_view("Access-Control-Allow-Origin"), "*");
+  }
+
   http_response.SetHeader(std::string_view("Access-Control-Allow-Methods"), "GET, POST, OPTIONS");
-  http_response.SetHeader(std::string_view("Access-Control-Allow-Headers"), "Content-Type");
+  http_response.SetHeader(std::string_view("Access-Control-Allow-Headers"), "Content-Type, X-Requested-With");
   http_response.SetHeader(std::string_view("Access-Control-Allow-Credentials"), "true");
 
   if (request.GetMethod() == userver::server::http::HttpMethod::kOptions) {
