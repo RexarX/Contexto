@@ -64,35 +64,37 @@ export class App extends React.Component<Record<string, never>, AppState> {
     try {
       this.assistant = initializeAssistant(() => this.getStateForAssistant());
 
-      this.assistant.on("data", (event: AssistantEvent) => {
-        console.log(`assistant.on(data)`, event);
-        if (event.type === "character") {
-          console.log(
-            `assistant.on(data): character: "${event.character?.id}"`,
-          );
-        } else if (event.type === "insets") {
-          console.log(`assistant.on(data): insets`);
-        } else if (event.action) {
-          this.dispatchAssistantAction(event.action);
-        }
-      });
+      if (this.assistant) {
+        this.assistant.on("data", (event: AssistantEvent) => {
+          console.log(`assistant.on(data)`, event);
+          if (event.type === "character") {
+            console.log(
+              `assistant.on(data): character: "${event.character?.id}"`,
+            );
+          } else if (event.type === "insets") {
+            console.log(`assistant.on(data): insets`);
+          } else if (event.action) {
+            this.dispatchAssistantAction(event.action);
+          }
+        });
 
-      this.assistant.on("start", ((event: AssistantEventStart) => {
-        const initialData = this.assistant.getInitialData();
-        console.log(`assistant.on(start)`, event, initialData);
-      }) as any);
+        this.assistant.on("start", ((event: AssistantEventStart) => {
+          const initialData = this.assistant?.getInitialData();
+          console.log(`assistant.on(start)`, event, initialData);
+        }) as any);
 
-      this.assistant.on("command", (event) => {
-        console.log(`assistant.on(command)`, event);
-      });
+        this.assistant.on("command", (event) => {
+          console.log(`assistant.on(command)`, event);
+        });
 
-      this.assistant.on("error", (event) => {
-        console.log(`assistant.on(error)`, event);
-      });
+        this.assistant.on("error", (event) => {
+          console.log(`assistant.on(error)`, event);
+        });
 
-      this.assistant.on("tts", (event) => {
-        console.log(`assistant.on(tts)`, event);
-      });
+        this.assistant.on("tts", (event) => {
+          console.log(`assistant.on(tts)`, event);
+        });
+      }
     } catch (error) {
       console.warn("Failed to initialize assistant:", error);
       this.assistant = null;
