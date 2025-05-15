@@ -23,7 +23,7 @@ void SessionManager::CleanupSessions() {
 }
 
 void SessionManager::SetTargetWord(const std::string& session_id, std::string_view word_with_pos) {
-  std::lock_guard lock(mutex_);
+  std::unique_lock lock(mutex_);
   if (game_sessions_.size() >= max_sessions_) {
     LOG_WARNING() << "Session limit reached, cleaning up old sessions";
     mutex_.unlock();

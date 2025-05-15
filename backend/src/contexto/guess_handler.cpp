@@ -95,13 +95,15 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
 
     LOG_INFO() << ss.str();
 
-    const int rank = dictionary_.CalculateRank(guessed_word, target_word_with_pos);
-    if (rank < 0) {
+    const auto rank_result = dictionary_.CalculateRank(guessed_word, target_word_with_pos);
+    if (!rank_result) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kInternalServerError);
       constexpr std::string_view error = "Failed to calculate rank";
       LOG_ERROR() << "Error processing guess: " << error;
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", error));
     }
+
+    const int rank = *rank_result;
 
     const auto response =
         userver::formats::json::MakeObject("word", guessed_word, "rank", rank, "correct", (rank == 1 ? "yes" : "no"));

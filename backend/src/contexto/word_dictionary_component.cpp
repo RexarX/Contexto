@@ -82,10 +82,10 @@ WordDictionaryComponent::WordDictionaryComponent(const userver::components::Comp
   LOG_INFO() << "Dictionary loaded with " << dictionary_.DictionarySize() << " words";
 }
 
-int WordDictionaryComponent::CalculateRank(std::string_view guessed_word, std::string_view target_word) const {
+std::optional<int> WordDictionaryComponent::CalculateRank(std::string_view guessed_word, std::string_view target_word) const {
   if (!models::WordHasPOS(target_word)) {
     LOG_ERROR() << "Failed to calculate rank: target_word '" << target_word << "' must have a POS";
-    return -1;
+    return std::nullopt;
   }
 
   if (guessed_word == models::GetWordFromWordWithPOS(target_word)) return 1;
@@ -136,7 +136,7 @@ int WordDictionaryComponent::CalculateRank(std::string_view guessed_word, std::s
     const float similarity = dictionary_.CalculateSimilarity(guessed_word, target_word);
     if (similarity == -1.0f) {
       LOG_ERROR() << "Failed to calculate similarity for '" << guessed_word << "' and '" << target_word << "'";
-      return -1;
+      return std::nullopt;
     }
     return calculate_rank(similarity);
   }
@@ -156,7 +156,8 @@ int WordDictionaryComponent::CalculateRank(std::string_view guessed_word, std::s
     min_rank = std::min(min_rank, rank);
   }
 
-  return min_rank == std::numeric_limits<int>::max() ? -1 : min_rank;
+  if (min_rank == std::numeric_limits<int>::max()) return std::nullopt;
+  return  min_rank;
 }
 
 std::vector<models::Word> WordDictionaryComponent::GetSimilarWords(std::string_view word,
@@ -172,8 +173,13 @@ std::vector<models::Word> WordDictionaryComponent::GetSimilarWords(std::string_v
   const float similarity = dictionary_.CalculateSimilarity(word, target_word);
   LOG_DEBUG() << "Similarity between " << word << " and " << target_word << ": " << similarity;
 
-  // Calculate rank using our improved method
-  const int rank = CalculateRank(word, target_word);
+  const auto rank_result = CalculateRank(word, target_word);
+  if (!rank_result) {
+    LOG_ERROR() << "Failed to get similar words for '" << word << "' and '" << target_word << "'";
+    return similar_words;
+  }
+
+  const int rank = *rank_result;
   LOG_INFO() << "Final rank for " << word << ": " << rank << " (similarity: " << similarity << ")";
 
   models::Word model_word{.id = std::string(word), .similarity_score = similarity, .rank = rank};

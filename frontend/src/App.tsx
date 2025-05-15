@@ -214,7 +214,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
     }
   };
 
-  makeGuess(action: AssistantAction): Promise<void> {
+  async makeGuess(action: AssistantAction): Promise<void> {
     console.log("makeGuess", action);
     if (action.word && !this.state.gameState.gameOver) {
       if (action.word) {
@@ -242,6 +242,10 @@ export class App extends React.Component<Record<string, never>, AppState> {
         credentials: "include",
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.error) {
@@ -263,11 +267,21 @@ export class App extends React.Component<Record<string, never>, AppState> {
 
       // Update the game state with the new guess
       const newGuessedWords = [...this.state.gameState.guessedWords];
-      newGuessedWords.push({
-        id: crypto.randomUUID(),
-        text: word,
-        rank: isNaN(rankAsNumber) ? -1 : rankAsNumber, // Use parsed number, handle NaN
-      });
+
+      // Check if the word already exists in the list (by text)
+      const wordExists = newGuessedWords.some(
+        (existingWord) =>
+          existingWord.text.toLowerCase() === word.toLowerCase(),
+      );
+
+      // Only add if the word doesn't already exist
+      if (!wordExists) {
+        newGuessedWords.push({
+          id: crypto.randomUUID(),
+          text: word,
+          rank: isNaN(rankAsNumber) ? -1 : rankAsNumber,
+        });
+      }
 
       // Sort by rank (similarity to target word)
       newGuessedWords.sort((a, b) => a.rank - b.rank);

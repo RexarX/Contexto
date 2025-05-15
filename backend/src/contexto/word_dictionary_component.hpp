@@ -26,7 +26,7 @@ public:
     return dictionary_.GetRandomWordByType(dictionary_preferred_word_type_);
   }
 
-  int CalculateRank(std::string_view guessed_word, std::string_view target_word) const;
+  std::optional<int> CalculateRank(std::string_view guessed_word, std::string_view target_word) const;
 
   std::vector<models::Word> GetSimilarWords(std::string_view word, std::string_view target_word) const;
 

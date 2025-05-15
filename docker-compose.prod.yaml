@@ -1,0 +1,65 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contexto-backend
+    volumes:
+      - ./backend/assets:/app/backend/assets
+      - backend_build:/app/backend/build
+    environment:
+      - TERM=xterm-color
+    expose:
+      - "8080"
+    networks:
+      - app-network
+    command: /bin/bash -c "cd backend && ./scripts/build.sh --type Release --compiler gcc --build-system ninja --no-tests && ./scripts/run.sh --type Release"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contexto-frontend
+    volumes:
+      - frontend_build:/app/frontend/dist
+    environment:
+      - NODE_ENV=production
+      - VITE_API_BASE_URL=/api
+    expose:
+      - "3000"
+    networks:
+      - app-network
+    command: /bin/bash -c "cd frontend && npm install && npm run build && npm run preview -- --host 0.0.0.0 --port 3000"
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: contexto-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - frontend_build:/app/frontend/dist:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  backend_build:
+  frontend_build:

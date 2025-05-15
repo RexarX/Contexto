@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <cctype>
 #include <chrono>
 #include <cmath>
@@ -15,7 +14,6 @@
 #include <numeric>
 #include <optional>
 #include <random>
-#include <shared_mutex>
 #include <span>
 #include <sstream>
 #include <stdexcept>

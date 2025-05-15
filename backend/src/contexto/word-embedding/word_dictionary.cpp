@@ -217,6 +217,16 @@ float WordDictionary::CalculateSimilarity(std::string_view word1, std::string_vi
   // If words are identical, return perfect similarity
   if (word1 == word2) return 1.0f;
 
+  if (!models::WordHasPOS(word1)) {
+    LOG_ERROR() << "'" << word1 << "' has no POS";
+    return -1.0f;
+  }
+
+  if (!models::WordHasPOS(word2)) {
+    LOG_ERROR() << "'" << word2 << "' has no POS";
+    return -1.0f;
+  }
+
   const models::DictionaryWord* dict_word1 = FindWord(word1);
   const models::DictionaryWord* dict_word2 = FindWord(word2);
 
@@ -231,7 +241,9 @@ float WordDictionary::CalculateSimilarity(std::string_view word1, std::string_vi
   }
 
   // Both words have embeddings
-  return dict_word1->CalculateSimilarity(*dict_word2);
+  float similarity = dict_word1->CalculateSimilarity(*dict_word2);
+  if (dict_word1->type == dict_word2->type) similarity *= 1.1f;
+  return std::clamp(similarity, 0.0f, 1.0f);
 }
 
 const models::DictionaryWord* WordDictionary::GetRandomWord() const {

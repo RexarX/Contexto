@@ -8,24 +8,32 @@ namespace contexto::models {
 
 enum class WordType {
   kUnknown = 0,
-  kNoun = 1,
-  kVerb = 2,
-  kAdjective = 3,
-  kAdverb = 4,
-  kPronoun = 5,
-  kPreposition = 6,
-  kConjunction = 7,
-  kInterjection = 8,
-  kParticle = 9,
-  kNumeral = 10,
-  kAny = 11
+  kAdjective,
+  kAdposition,
+  kAdverb,
+  kAuxiliary,
+  kCoordinatingConjunction,
+  kDeterminer,
+  kInterjection,
+  kNoun,
+  kNumeral,
+  kParticle,
+  kPronoun,
+  kProperNoun,
+  kPunctuation,
+  kSubordinatingConjunction,
+  kSymbol,
+  kVerb,
+  kOther,
+  kAny
 };
 
-constexpr std::array<std::string_view, 12> POS_TAGS = {"NOUN", "VERB",  "ADJ",   "ADV",  "PRON", "ADP",
-                                                       "CONJ", "CCONJ", "SCONJ", "INTJ", "PART", "NUM"};
+constexpr std::array<std::string_view, 17> POS_TAGS = {"ADJ",   "ADP",   "ADV", "AUX",  "CCONJ", "DET",
+                                                       "INTJ",  "NOUN",  "NUM", "PART", "PRON",  "PROPN",
+                                                       "PUNCT", "SCONJ", "SYM", "VERB", "X"};
 
 static constexpr bool WordHasPOS(std::string_view word) noexcept {
-  if (word.size() < 4 || word.rfind('_') == std::string_view::npos) {
+  if (word.size() < 4 || word.find_last_of('_') == std::string_view::npos) {
     return false;
   }
 
@@ -40,18 +48,25 @@ static constexpr WordType GetWordTypeFromPOS(std::string_view pos_tag) noexcept 
   if (pos_tag == "VERB") return WordType::kVerb;
   if (pos_tag == "ADJ") return WordType::kAdjective;
   if (pos_tag == "ADV") return WordType::kAdverb;
-  if (pos_tag == "PRON") return WordType::kPronoun;
-  if (pos_tag == "ADP") return WordType::kPreposition;
-  if (pos_tag == "CONJ" || pos_tag == "CCONJ" || pos_tag == "SCONJ") return WordType::kConjunction;
+  if (pos_tag == "ADP") return WordType::kAdposition;
+  if (pos_tag == "AUX") return WordType::kAuxiliary;
+  if (pos_tag == "CCONJ") return WordType::kCoordinatingConjunction;
+  if (pos_tag == "DET") return WordType::kDeterminer;
   if (pos_tag == "INTJ") return WordType::kInterjection;
-  if (pos_tag == "PART") return WordType::kParticle;
   if (pos_tag == "NUM") return WordType::kNumeral;
+  if (pos_tag == "PART") return WordType::kParticle;
+  if (pos_tag == "PRON") return WordType::kPronoun;
+  if (pos_tag == "PROPN") return WordType::kProperNoun;
+  if (pos_tag == "PUNCT") return WordType::kPunctuation;
+  if (pos_tag == "SCONJ") return WordType::kSubordinatingConjunction;
+  if (pos_tag == "SYM") return WordType::kSymbol;
+  if (pos_tag == "X") return WordType::kOther;
   return WordType::kUnknown;
 }
 
 static constexpr std::string_view GetWordFromWordWithPOS(std::string_view word_with_pos) noexcept {
   if (word_with_pos.size() < 4) return {};
-  const size_t pos_separator = word_with_pos.rfind('_');
+  const size_t pos_separator = word_with_pos.find_last_of('_');
   if (pos_separator != std::string::npos) {
     return {word_with_pos.data(), pos_separator};
   }
@@ -61,44 +76,72 @@ static constexpr std::string_view GetWordFromWordWithPOS(std::string_view word_w
 static inline std::string GetWordWithPOS(std::string word, WordType word_type) noexcept {
   std::string_view pos;
   switch (word_type) {
-    case WordType::kNoun: {
-      pos = "NOUN";
-      break;
-    }
-    case WordType::kVerb: {
-      pos = "VERB";
-      break;
-    }
     case WordType::kAdjective: {
-      pos = "ADJ";
+      pos = "_ADJ";
+      break;
+    }
+    case WordType::kAdposition: {
+      pos = "_ADP";
       break;
     }
     case WordType::kAdverb: {
-      pos = "ADV";
+      pos = "_ADV";
       break;
     }
-    case WordType::kPronoun: {
-      pos = "PRON";
+    case WordType::kAuxiliary: {
+      pos = "_AUX";
       break;
     }
-    case WordType::kPreposition: {
-      pos = "ADP";
+    case WordType::kCoordinatingConjunction: {
+      pos = "_CCONJ";
       break;
     }
-    case WordType::kConjunction: {
-      pos = "CONJ";
+    case WordType::kDeterminer: {
+      pos = "_DET";
       break;
     }
     case WordType::kInterjection: {
-      pos = "INTJ";
+      pos = "_INTJ";
       break;
     }
-    case WordType::kParticle: {
-      pos = "PART";
+    case WordType::kNoun: {
+      pos = "_NOUN";
       break;
     }
     case WordType::kNumeral: {
-      pos = "NUM";
+      pos = "_NUM";
+      break;
+    }
+    case WordType::kParticle: {
+      pos = "_PART";
+      break;
+    }
+    case WordType::kPronoun: {
+      pos = "_PRON";
+      break;
+    }
+    case WordType::kProperNoun: {
+      pos = "_PROPN";
+      break;
+    }
+    case WordType::kPunctuation: {
+      pos = "_PUNCT";
+      break;
+    }
+    case WordType::kSubordinatingConjunction: {
+      pos = "_SCONJ";
+      break;
+    }
+    case WordType::kSymbol: {
+      pos = "_SYM";
+      break;
+    }
+    case WordType::kVerb: {
+      pos = "_VERB";
+      break;
+    }
+    case WordType::kOther: {
+      pos = "_X";
       break;
     }
     default:
