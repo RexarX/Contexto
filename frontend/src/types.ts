@@ -69,6 +69,15 @@ export type AssistantEventInsets = {
   };
 };
 
+export interface AssistantSendData {
+  action: {
+    action_id: string;
+    parameters: {
+      value: string;
+    };
+  };
+}
+
 export type AssistantSmartAppCallback = (
   data: AssistantSmartAppData | AssistantSmartAppError,
 ) => void;

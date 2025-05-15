@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_APP_TOKEN: string;
   readonly VITE_APP_SMARTAPP: string;
+  readonly VITE_API_BASE_URL: string;
 }
 
 interface ImportMeta {
