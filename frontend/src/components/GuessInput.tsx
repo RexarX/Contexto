@@ -20,6 +20,7 @@ const Form = styled.form`
 
 const NewGameBtn = styled(Button)`
   width: 100%;
+  margin-bottom: 16px; // Add margin to ensure visibility above assistant menu
 `;
 
 interface NewGameButtonProps {

@@ -20,6 +20,37 @@ const StyledHeadline = styled(Headline1)`
   width: 100%;
 `;
 
+// Use more vertical space
+const GameContainer = styled(Container)`
+  min-height: 85vh; // Slightly reduced from 90vh to prevent overflowing
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px; // Add extra padding at the bottom to avoid overlay with assistant menu
+`;
+
+const GameCard = styled(Card)`
+  padding: 2rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(25, 25, 25, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const ContentArea = styled.div`
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const BottomArea = styled.div`
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+`;
+
 interface ContextoGameProps {
   gameState: GameState;
   onGuess: (word: string) => void;
@@ -39,30 +70,32 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
   const { guessedWords, gameOver, targetWord } = gameState;
 
   return (
-    <Container>
-      <Card style={{ padding: "2rem" }}>
-        <StyledHeader style={{ textAlign: "center", display: "block" }}>
+    <GameContainer>
+      <GameCard>
+        <StyledHeader>
           <StyledHeadline>Contexto</StyledHeadline>
         </StyledHeader>
 
-        <WordsList
-          words={guessedWords}
-          gameOver={gameOver}
-          targetWord={targetWord}
-        />
+        <ContentArea>
+          <WordsList
+            words={guessedWords}
+            gameOver={gameOver}
+            targetWord={targetWord}
+          />
 
-        <div style={{ marginTop: "1rem" }}>
-          <GuessInput onGuess={onGuess} disabled={gameOver} />
+          <BottomArea>
+            <GuessInput onGuess={onGuess} disabled={gameOver} />
 
-          {gameOver && (
-            <div style={{ marginTop: "1rem" }}>
-              <GuessInput.NewGameButton onClick={onNewGame}>
-                Новая игра
-              </GuessInput.NewGameButton>
-            </div>
-          )}
-        </div>
-      </Card>
+            {gameOver && (
+              <div style={{ marginTop: "1rem" }}>
+                <GuessInput.NewGameButton onClick={onNewGame}>
+                  Новая игра
+                </GuessInput.NewGameButton>
+              </div>
+            )}
+          </BottomArea>
+        </ContentArea>
+      </GameCard>
 
       {feedbackMessage && (
         <VoiceFeedback
@@ -72,6 +105,6 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
       )}
 
       {gameOver && targetWord && <Celebration word={targetWord} />}
-    </Container>
+    </GameContainer>
   );
 };

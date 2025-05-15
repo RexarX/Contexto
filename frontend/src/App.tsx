@@ -47,7 +47,7 @@ const initializeAssistant = (getState: () => AssistantAppState) => {
 };
 
 export class App extends React.Component<Record<string, never>, AppState> {
-  private assistant: ReturnType<typeof createAssistant>;
+  private assistant: ReturnType<typeof createAssistant> | null = null;
 
   constructor(props: Record<string, never>) {
     super(props);
@@ -60,38 +60,48 @@ export class App extends React.Component<Record<string, never>, AppState> {
       },
     };
 
-    this.assistant = initializeAssistant(() => this.getStateForAssistant());
+    // Try to initialize the assistant, but make it optional
+    try {
+      this.assistant = initializeAssistant(() => this.getStateForAssistant());
 
-    this.assistant.on("data", (event: AssistantEvent) => {
-      console.log(`assistant.on(data)`, event);
-      if (event.type === "character") {
-        console.log(`assistant.on(data): character: "${event.character?.id}"`);
-      } else if (event.type === "insets") {
-        console.log(`assistant.on(data): insets`);
-      } else if (event.action) {
-        this.dispatchAssistantAction(event.action);
-      }
-    });
+      this.assistant.on("data", (event: AssistantEvent) => {
+        console.log(`assistant.on(data)`, event);
+        if (event.type === "character") {
+          console.log(
+            `assistant.on(data): character: "${event.character?.id}"`,
+          );
+        } else if (event.type === "insets") {
+          console.log(`assistant.on(data): insets`);
+        } else if (event.action) {
+          this.dispatchAssistantAction(event.action);
+        }
+      });
 
-    this.assistant.on("start", ((event: AssistantEventStart) => {
-      const initialData = this.assistant.getInitialData();
-      console.log(`assistant.on(start)`, event, initialData);
+      this.assistant.on("start", ((event: AssistantEventStart) => {
+        const initialData = this.assistant.getInitialData();
+        console.log(`assistant.on(start)`, event, initialData);
+      }) as any);
 
-      // Start a new game when the app loads
-      this.startNewGame();
-    }) as any);
+      this.assistant.on("command", (event) => {
+        console.log(`assistant.on(command)`, event);
+      });
 
-    this.assistant.on("command", (event) => {
-      console.log(`assistant.on(command)`, event);
-    });
+      this.assistant.on("error", (event) => {
+        console.log(`assistant.on(error)`, event);
+      });
 
-    this.assistant.on("error", (event) => {
-      console.log(`assistant.on(error)`, event);
-    });
+      this.assistant.on("tts", (event) => {
+        console.log(`assistant.on(tts)`, event);
+      });
+    } catch (error) {
+      console.warn("Failed to initialize assistant:", error);
+      this.assistant = null;
+    }
+  }
 
-    this.assistant.on("tts", (event) => {
-      console.log(`assistant.on(tts)`, event);
-    });
+  componentDidMount() {
+    // Start a new game as soon as the component mounts, regardless of assistant
+    this.startNewGame();
   }
 
   getStateForAssistant(): AssistantAppState {
@@ -331,6 +341,11 @@ export class App extends React.Component<Record<string, never>, AppState> {
   };
 
   private sendActionValue(action_id: string, value: string): void {
+    if (!this.assistant) {
+      console.log("Assistant not initialized, skipping sendActionValue");
+      return;
+    }
+
     const data: AssistantSendData = {
       action: {
         action_id,
@@ -347,14 +362,21 @@ export class App extends React.Component<Record<string, never>, AppState> {
   render(): React.ReactNode {
     console.log("render");
     return (
-      <Container>
-        <ContextoGame
-          gameState={this.state.gameState}
-          onGuess={this.guessWord}
-          onNewGame={this.startNewGame}
-          feedbackMessage={this.state.feedbackMessage}
-        />
-      </Container>
+      <div
+        style={{
+          paddingBottom: "70px", // Add padding at bottom of overall app
+          minHeight: "100vh",
+        }}
+      >
+        <Container>
+          <ContextoGame
+            gameState={this.state.gameState}
+            onGuess={this.guessWord}
+            onNewGame={this.startNewGame}
+            feedbackMessage={this.state.feedbackMessage}
+          />
+        </Container>
+      </div>
     );
   }
 }

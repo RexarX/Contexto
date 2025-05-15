@@ -12,7 +12,11 @@ interface WordsListProps {
 const WordsContainer = styled(Card)`
   margin-bottom: 1.5rem;
   padding: 1rem;
-  min-height: 300px;
+  min-height: 400px; // Reduced from 500px
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; // Ensure content isn't clipped
 `;
 
 const TargetWordCard = styled(Card)`
@@ -26,6 +30,7 @@ const WordsListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1;
 `;
 
 const WordItem = styled(Cell)<{ isNew: boolean }>`
