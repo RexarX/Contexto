@@ -20,7 +20,7 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
   auto& http_response = request.GetHttpResponse();
 
   // Set proper CORS headers
-  const auto origin = request.GetHeader("Origin");
+  const auto& origin = request.GetHeader("Origin");
   if (!origin.empty()) {
     http_response.SetHeader(std::string_view("Access-Control-Allow-Origin"), origin);
   } else {

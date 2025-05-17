@@ -26,17 +26,7 @@ interface AppState {
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) return envUrl;
-
-  // Always use the same protocol as the current page
-  const protocol = window.location.protocol;
-  const hostname = window.location.hostname;
-
-  if (hostname === "localhost") {
-    return `${protocol}//localhost:8080`;
-  } else {
-    // Use the same host and protocol for the API, as Nginx will handle the proxying
-    return `${protocol}//${hostname}`;
-  }
+  return `${window.location.protocol}//${window.location.hostname}:8080`;
 })();
 
 const initializeAssistant = (getState: () => AssistantAppState) => {
