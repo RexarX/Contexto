@@ -184,6 +184,9 @@ export class App extends React.Component<Record<string, never>, AppState> {
           }
           break;
 
+        case "give_up":
+          return this.giveUp();
+
         case "get_hint":
           return Promise.resolve();
 
@@ -201,6 +204,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
         gameState: {
           guessedWords: [],
           gameOver: false,
+          userGaveUp: false,
         },
         feedbackMessage: undefined,
       });
@@ -339,11 +343,11 @@ export class App extends React.Component<Record<string, never>, AppState> {
       } else {
         // Provide feedback on how close they are
         let feedback = "Очень далеко";
-        if (data.rank <= 5) {
+        if (data.rank <= 10) {
           feedback = "Очень близко!";
-        } else if (data.rank <= 20) {
+        } else if (data.rank <= 100) {
           feedback = "Теплее!";
-        } else if (data.rank <= 50) {
+        } else if (data.rank <= 200) {
           feedback = "Холоднее";
         }
 
@@ -357,6 +361,64 @@ export class App extends React.Component<Record<string, never>, AppState> {
       const errorMessage = "Произошла ошибка при проверке слова";
       this.sendActionValue("error", errorMessage);
       this.setState({ feedbackMessage: { text: errorMessage, type: "error" } });
+    }
+  };
+
+  giveUp = async (): Promise<void> => {
+    try {
+      const storedSessionId = localStorage.getItem("Contexto_session_id");
+
+      const response = await fetch(`${API_BASE_URL}/api/give-up`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: storedSessionId,
+        }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        this.setState({ feedbackMessage: { text: data.error, type: "error" } });
+        return;
+      }
+
+      if (data.target_word) {
+        this.setState({
+          gameState: {
+            ...this.state.gameState,
+            gameOver: true,
+            targetWord: data.target_word,
+            userGaveUp: true,
+          },
+          feedbackMessage: {
+            text:
+              "Не расстраивайтесь, в следующий раз обязательно получится! Загаданное слово было: " +
+              data.target_word,
+            type: "feedback",
+          },
+        });
+
+        this.sendActionValue(
+          "give_up",
+          `Загаданное слово было: ${data.target_word}`,
+        );
+      }
+    } catch (error) {
+      console.error("Error giving up:", error);
+      this.setState({
+        feedbackMessage: {
+          text: "Произошла ошибка при получении ответа",
+          type: "error",
+        },
+      });
     }
   };
 
@@ -388,7 +450,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
     return (
       <div
         style={{
-          paddingBottom: "100px", // Add even more padding at bottom of overall app
+          paddingBottom: "100px",
           minHeight: "100vh",
         }}
       >
@@ -397,6 +459,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
             gameState={this.state.gameState}
             onGuess={this.guessWord}
             onNewGame={this.startNewGame}
+            onGiveUp={this.giveUp}
             feedbackMessage={this.state.feedbackMessage}
           />
         </Container>

@@ -20,7 +20,6 @@ const StyledHeadline = styled(Headline1)`
   width: 100%;
 `;
 
-// Use more vertical space
 const GameContainer = styled(Container)`
   min-height: 85vh; // Slightly reduced from 90vh to prevent overflowing
   display: flex;
@@ -55,6 +54,7 @@ interface ContextoGameProps {
   gameState: GameState;
   onGuess: (word: string) => void;
   onNewGame: () => void;
+  onGiveUp: () => void;
   feedbackMessage?: {
     text: string;
     type: "feedback" | "error" | "success";
@@ -65,9 +65,10 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
   gameState,
   onGuess,
   onNewGame,
+  onGiveUp,
   feedbackMessage,
 }) => {
-  const { guessedWords, gameOver, targetWord } = gameState;
+  const { guessedWords, gameOver, targetWord, userGaveUp } = gameState;
 
   return (
     <GameContainer>
@@ -84,7 +85,11 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
           />
 
           <BottomArea>
-            <GuessInput onGuess={onGuess} disabled={gameOver} />
+            <GuessInput
+              onGuess={onGuess}
+              onGiveUp={onGiveUp}
+              disabled={gameOver}
+            />
 
             {gameOver && (
               <div style={{ marginTop: "1rem" }}>
@@ -104,7 +109,9 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
         />
       )}
 
-      {gameOver && targetWord && <Celebration word={targetWord} />}
+      {gameOver && targetWord && !userGaveUp && (
+        <Celebration word={targetWord} />
+      )}
     </GameContainer>
   );
 };

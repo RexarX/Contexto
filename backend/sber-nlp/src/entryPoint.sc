@@ -8,6 +8,7 @@ require: js/stats.js
 
 require: sc/guessWord.sc
 require: sc/newGame.sc
+require: sc/giveUp.sc
 require: sc/rules.sc
 
 patterns:
@@ -20,13 +21,10 @@ theme: /
         q!: $regex</start>
         q!: (запусти|открой|вруби) [игру] [в] contexto
         a: Игра Contexto началась! Попробуйте угадать секретное слово.
+
         script:
             newGame($context);
             addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
-
-    state: CatchWord
-        q: $String
-        go!: /GuessWord
 
     state: GameStatus
         q!: [как] [мои|у меня] [дела|результаты|прогресс]
@@ -44,27 +42,27 @@ theme: /
                 $reactions.answer("Вы уже проверили " + stats.guessCount + " слов. " + message);
             }
 
-            addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
+            addSuggestions(["Правила", "Новая игра"], $context);
 
     state: Fallback
         event!: noMatch
+
         script:
-            log('entryPoint: Fallback: context: ' + JSON.stringify($context))
+            log('entryPoint: Fallback: context: ' + JSON.stringify($context));
             var userInput = $request.query;
 
+            // Only process non-empty inputs
             if (userInput && userInput.length > 1) {
-                // Skip certain system phrases
-                if (is_system_phrase(userInput)) {
+                // Check if it's a system phrase
+                if (isSystemPhrase(userInput)) {
                     $reactions.answer("Не совсем понимаю. Попробуйте назвать слово для проверки или скажите 'правила' для информации об игре.");
+                    addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
                 } else {
+                    // Process as word guess - only show the processing message
                     guessWord(userInput, $context);
-                    $reactions.answer("Проверяю слово \"" + userInput + "\"...");
-                    return;
                 }
+            } else {
+                // Very short or empty input
+                $reactions.answer("Я не понимаю. Попробуйте угадать слово или скажите \"новая игра\".");
+                addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
             }
-
-        random:
-            a: Я не понимаю. Попробуйте угадать слово или скажите "новая игра".
-            a: Не совсем понятно. Назовите слово, которое может быть загаданным, или скажите "правила" для информации об игре.
-        script:
-            addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);

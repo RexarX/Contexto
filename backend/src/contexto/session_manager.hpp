@@ -12,10 +12,9 @@ struct GuessInfo {
   int rank = -1;
 };
 
-struct TargetWord {
-  std::string_view word_with_pos;
-  std::string_view word = word_with_pos;
-  models::WordType word_type = models::WordType::kUnknown;
+struct GameSession {
+  std::string_view target_word_with_pos;
+  bool is_game_over = false;
 };
 
 class SessionManager final : public userver::components::LoggableComponentBase {
@@ -45,11 +44,26 @@ public:
 
   void SetTargetWord(const std::string& session_id, std::string_view word_with_pos);
 
+  void MarkGameOver(const std::string& session_id) {
+    std::lock_guard lock(mutex_);
+    const auto it = game_sessions_.find(session_id);
+    if (it != game_sessions_.end()) {
+      it->second.is_game_over = true;
+    }
+  }
+
   std::string_view GetTargetWord(const std::string& session_id) const {
     std::shared_lock lock(mutex_);
     const auto it = game_sessions_.find(session_id);
     if (it == game_sessions_.end()) return {};
-    return it->second;
+    return it->second.target_word_with_pos;
+  }
+
+  bool IsGameOver(const std::string& session_id) const {
+    std::shared_lock lock(mutex_);
+    const auto it = game_sessions_.find(session_id);
+    if (it == game_sessions_.end()) return false;
+    return it->second.is_game_over;
   }
 
   std::vector<std::string_view> GetGuessedWords(const std::string& session_id) const;
@@ -60,7 +74,7 @@ public:
 
 private:
   mutable userver::engine::SharedMutex mutex_;
-  std::unordered_map<std::string, std::string_view> game_sessions_;
+  std::unordered_map<std::string, GameSession> game_sessions_;
   size_t max_sessions_ = 0;
 
   std::unordered_map<std::string, std::vector<GuessInfo>> session_guesses_;

@@ -4,6 +4,7 @@ import styled from "styled-components";
 
 interface GuessInputProps {
   onGuess: (word: string) => void;
+  onGiveUp: () => void; // Add this new prop
   disabled?: boolean;
 }
 
@@ -60,21 +61,32 @@ export class GuessInput extends React.Component<
     this.setState({ guess: event.target.value });
   };
 
+  handleGiveUp = (): void => {
+    this.props.onGiveUp();
+  };
+
   render(): React.ReactNode {
     return (
-      <Form onSubmit={this.handleSubmit}>
-        <TextField
-          placeholder="Введите слово"
-          value={this.state.guess}
-          onChange={this.handleChange}
-          disabled={this.props.disabled}
-          required
-          autoFocus
-        />
-        <Button type="submit" view="primary" disabled={this.props.disabled}>
-          Угадать
-        </Button>
-      </Form>
+      <>
+        <Form onSubmit={this.handleSubmit}>
+          <TextField
+            placeholder="Введите слово"
+            value={this.state.guess}
+            onChange={this.handleChange}
+            disabled={this.props.disabled}
+            required
+            autoFocus
+          />
+          <Button type="submit" view="primary" disabled={this.props.disabled}>
+            Угадать
+          </Button>
+          {!this.props.disabled && (
+            <Button view="warning" onClick={this.handleGiveUp}>
+              Сдаться
+            </Button>
+          )}
+        </Form>
+      </>
     );
   }
 }

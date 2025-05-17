@@ -5,6 +5,7 @@
 
 #include <userver/components/loggable_component_base.hpp>
 #include <userver/engine/shared_mutex.hpp>
+#include <userver/logging/log.hpp>
 #include <userver/yaml_config/schema.hpp>
 
 namespace contexto {
@@ -18,7 +19,8 @@ public:
                           const userver::components::ComponentContext& context);
 
   bool ValidateWord(std::string_view word) const {
-    if (word.empty()) return {};
+    LOG_WARNING() << "111111111111111111111 | " << word;
+    if (word.empty()) return false;
     return dictionary_.ContainsWord(word);
   }
 
@@ -36,20 +38,23 @@ public:
 
 private:
   static constexpr models::WordType StringToWordType(std::string_view str) noexcept {
-    if (str == "noun") {
-      return models::WordType::kNoun;
-    } else if (str == "verb") {
-      return models::WordType::kVerb;
-    } else if (str == "adjective") {
-      return models::WordType::kAdjective;
-    } else if (str == "adverb") {
-      return models::WordType::kAdverb;
-    } else if (str == "pronoun") {
-      return models::WordType::kPronoun;
-    } else if (str == "any") {
-      return models::WordType::kAny;
-    }
-
+    if (str == "noun") return models::WordType::kNoun;
+    if (str == "verb") return models::WordType::kVerb;
+    if (str == "adjective") return models::WordType::kAdjective;
+    if (str == "adverb") return models::WordType::kAdverb;
+    if (str == "adposition") return models::WordType::kAdposition;
+    if (str == "auxiliary") return models::WordType::kAuxiliary;
+    if (str == "coordinating_conjunction") return models::WordType::kCoordinatingConjunction;
+    if (str == "determiner") return models::WordType::kDeterminer;
+    if (str == "interjection") return models::WordType::kInterjection;
+    if (str == "numeral") return models::WordType::kNumeral;
+    if (str == "particle") return models::WordType::kParticle;
+    if (str == "pronoun") return models::WordType::kPronoun;
+    if (str == "proper_noun") return models::WordType::kProperNoun;
+    if (str == "punctuation") return models::WordType::kPunctuation;
+    if (str == "subordinating_conjunction") return models::WordType::kSubordinatingConjunction;
+    if (str == "symbol") return models::WordType::kSymbol;
+    if (str == "any") return models::WordType::kAny;
     return models::WordType::kUnknown;
   }
 

@@ -1,4 +1,4 @@
-name: Contexto
+name: ContextoGame
 
 entryPoint:
   - entryPoint.sc

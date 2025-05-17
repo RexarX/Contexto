@@ -154,9 +154,19 @@ static inline std::string GetWordWithPOS(std::string word, WordType word_type) n
 
 struct DictionaryWord {
   std::string word_with_pos;
-  std::string_view word = word_with_pos;
-  WordType type = WordType::kUnknown;
   Eigen::VectorXf embedding;
+
+  std::string_view GetWord() const noexcept { return GetWordFromWordWithPOS(word_with_pos); }
+
+  WordType GetType() const noexcept {
+    const size_t pos_separator = word_with_pos.find_last_of('_');
+    if (pos_separator != std::string::npos) {
+      const std::string_view pos_tag_view(word_with_pos.data() + pos_separator + 1,
+                                          word_with_pos.size() - pos_separator - 1);
+      return GetWordTypeFromPOS(pos_tag_view);
+    }
+    return WordType::kUnknown;
+  }
 
   float CalculateSimilarity(const DictionaryWord& other) const { return embedding.dot(other.embedding); }
 };

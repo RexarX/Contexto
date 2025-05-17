@@ -1,5 +1,6 @@
 #include "contexto/guess_handler.hpp"
 #include "contexto/new_game_handler.hpp"
+#include "contexto/give_up_handler.hpp"
 #include "contexto/session_manager.hpp"
 #include "contexto/word_dictionary_component.hpp"
 
@@ -20,6 +21,7 @@ int main(int argc, char* argv[]) {
                             .Append<contexto::SessionManager>()
                             .Append<contexto::NewGameHandler>()
                             .Append<contexto::GuessHandler>()
+                            .Append<contexto::GiveUpHandler>()
                             .Append<contexto::WordDictionaryComponent>();
 #ifndef RELEASE_MODE
   component_list.Append<userver::server::handlers::TestsControl>("tests-control");

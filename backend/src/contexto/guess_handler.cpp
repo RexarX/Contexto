@@ -76,6 +76,13 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Invalid game session"));
     }
 
+    if (session_manager_.IsGameOver(session_id)) {
+      request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
+      LOG_INFO() << "Game is already over for session " << session_id;
+      return userver::formats::json::ToString(
+          userver::formats::json::MakeObject("error", "Game is already over. Start a new game to continue."));
+    }
+
     const std::string_view target_word_with_pos = session_manager_.GetTargetWord(session_id);
     if (!dictionary_.ValidateWord(guessed_word)) {
       request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
@@ -83,15 +90,7 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
       return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Invalid word"));
     }
 
-    // Get similarity ranking
-    // const auto similar_words = dictionary_.GetSimilarWords(guessed_word, target_word);
-    // if (similar_words.empty()) {
-    //   request.SetResponseStatus(userver::server::http::HttpStatus::kInternalServerError);
-    //   LOG_ERROR() << "Failed to get similar words for target word: " << target_word;
-    //   return userver::formats::json::ToString(userver::formats::json::MakeObject("error", "Failed to process word"));
-    // }
-
-    // const auto& result = similar_words.front();
+#ifdef DEBUG_MODE
     const auto temp = dictionary_.GetDictionary().GetMostSimilarWords(target_word_with_pos, 100);
     std::ostringstream ss;
     ss << "Most similar words to target '" << target_word_with_pos << "': ";
@@ -102,6 +101,7 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
     }
 
     LOG_INFO() << ss.str();
+#endif
 
     const auto rank_result = dictionary_.CalculateRank(guessed_word, target_word_with_pos);
     if (!rank_result) {

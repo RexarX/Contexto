@@ -8,6 +8,7 @@ export interface GameState {
   targetWord?: string;
   guessedWords: Word[];
   gameOver: boolean;
+  userGaveUp?: boolean; // Add this flag
 }
 
 export interface AssistantState {

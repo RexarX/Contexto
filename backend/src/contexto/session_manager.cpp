@@ -31,7 +31,7 @@ void SessionManager::SetTargetWord(const std::string& session_id, std::string_vi
     mutex_.lock();
   }
 
-  game_sessions_[session_id] = word_with_pos;
+  game_sessions_[session_id] = GameSession{.target_word_with_pos = word_with_pos, .is_game_over = false};
 }
 
 std::vector<std::string_view> SessionManager::GetGuessedWords(const std::string& session_id) const {

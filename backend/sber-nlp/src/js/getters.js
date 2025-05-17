@@ -68,6 +68,22 @@ function get_last_guesses(request, count) {
   return [];
 }
 
+function get_closest_word(request) {
+  var items = get_items(request);
+  if (!items || items.length === 0) {
+    return null;
+  }
+  var sortedItems = JSON.parse(JSON.stringify(items));
+  sortedItems.sort(function (a, b) {
+    return Number(a.number) - Number(b.number);
+  });
+
+  log("Sorted items by rank: " + JSON.stringify(sortedItems));
+
+  // Return the item with lowest rank (closest to target)
+  return sortedItems[0];
+}
+
 function is_game_over(request) {
   var gameState = get_game_state(request);
   return gameState.gameOver === true;

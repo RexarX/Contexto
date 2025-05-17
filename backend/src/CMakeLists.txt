@@ -143,16 +143,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     string(TOUPPER ${OUTPUTCONFIG} UPOUTPUTCONFIG)
-    set_target_properties(${PROJECT_NAME}_objs PROPERTIES
-        TARGET_NAME_${UPOUTPUTCONFIG} ${PROJECT_NAME}_objs
-        ARCHIVE_OUTPUT_NAME_${UPOUTPUTCONFIG} ${PROJECT_NAME}_objs
-        RUNTIME_OUTPUT_DIRECTORY_${UPOUTPUTCONFIG}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}
-        LIBRARY_OUTPUT_DIRECTORY_${UPOUTPUTCONFIG}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}
-        ARCHIVE_OUTPUT_DIRECTORY_${UPOUTPUTCONFIG}
-            ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}
-    )
     set_target_properties(${PROJECT_NAME} PROPERTIES
         TARGET_NAME_${UPOUTPUTCONFIG} ${PROJECT_NAME}
         ARCHIVE_OUTPUT_NAME_${UPOUTPUTCONFIG} ${PROJECT_NAME}
@@ -167,7 +157,6 @@ endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
 
 set(CONFIG_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/configs/static_config.yaml
-    ${CMAKE_CURRENT_SOURCE_DIR}/configs/config.yaml
 )
 
 install(
@@ -179,23 +168,37 @@ install(
 set(ASSETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../assets)
 if(EXISTS ${ASSETS_DIR})
     foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-        add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${ASSETS_DIR}
-                ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}/assets
-            COMMENT "Copying assets directory to ${OUTPUTCONFIG} build output"
-        )
+        if(OUTPUTCONFIG STREQUAL "Release")
+            # Copy assets for Release builds
+            add_custom_command(
+                TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    ${ASSETS_DIR}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}/assets
+                COMMENT "Copying assets directory to ${OUTPUTCONFIG} build output"
+            )
+        else()
+            # Create symlink for other builds
+            add_custom_command(
+                TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}
+                COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    ${ASSETS_DIR}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../bin/${OUTPUTCONFIG}/assets
+                COMMENT "Creating symlink to assets directory for ${OUTPUTCONFIG} build output"
+            )
+        endif()
     endforeach()
 
-    # Also install assets with the project
+    # Install assets with the project
     install(
         DIRECTORY ${ASSETS_DIR}/
         DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/assets
         COMPONENT ${PROJECT_NAME}
     )
 
-    message(STATUS "Assets directory will be included in build output")
+    message(STATUS "Assets directory will be included in build output (symlinks for debug builds, copies for release)")
 else()
     message(STATUS "Assets directory not found at ${ASSETS_DIR}")
 endif()

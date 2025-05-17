@@ -78,6 +78,12 @@ components_manager:
       task_processor: main-task-processor
       log-level: DEBUG
 
+    contexto-give-up-handler:
+      path: /api/give-up
+      method: POST
+      task_processor: main-task-processor
+      log-level: DEBUG
+
     ping:
       path: /ping
       method: GET

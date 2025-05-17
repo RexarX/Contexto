@@ -83,6 +83,7 @@ public:
   bool HasDedicatedDictionary() const noexcept { return has_dedicated_dictionary_; }
 
 private:
+  void BuildIndices();
   static std::string NormalizeWord(std::string_view word) { return utils::utf8::ToLower(word); }
 
   std::vector<models::DictionaryWord> words_with_embeddings_;

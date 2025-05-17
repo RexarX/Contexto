@@ -1,18 +1,29 @@
 {
-  "project" : {
-    "id" : "my_canvas_test-17154-AnE",
-    "name" : "my_canvas_test-17154-AnE",
-    "folder" : "/jaicp"
+  "project": {
+    "id": "code_for_contesto-6648801-XZr",
+    "name": "code_for_contesto-6648801-XZr",
+    "folder": "/jaicp"
   },
-  "settings" : {
-    "language" : "ru",
-    "spellingCorrection" : false,
-    "classificationAlgorithm" : "sts",
-    "timezone" : "UTC",
-    "businessShared" : false,
-    "business" : false
+  "settings": {
+    "language": "ru",
+    "spellingCorrection": false,
+    "classificationAlgorithm": "sts",
+    "timezone": "Europe/Moscow",
+    "extendedSettings": {
+      "tokenizerEngine": "default"
+    },
+    "shared": false,
+    "businessShared": false,
+    "business": false
   },
-  "intents" : [ ],
-  "entities" : [ ],
-  "enabledSystemEntities" : [ "duckling.number", "duckling.time", "duckling.duration", "duckling.phone-number", "duckling.email", "duckling.url" ]
+  "intents": [],
+  "entities": [],
+  "enabledSystemEntities": [
+    "duckling.number",
+    "duckling.time",
+    "duckling.duration",
+    "duckling.phone-number",
+    "duckling.email",
+    "duckling.url"
+  ]
 }

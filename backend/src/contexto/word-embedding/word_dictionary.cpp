@@ -65,7 +65,11 @@ bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, mo
   while (std::getline(file, line)) {
     std::istringstream iss(line);
     std::string word_with_pos;
-    if (!(iss >> word_with_pos)) continue;  // Skip invalid lines
+    // Skip invalid lines
+    if (!(iss >> word_with_pos)) {
+      ++filtered_words;
+      continue;
+    }
 
     // Parse word and POS tag
     models::WordType word_type = models::WordType::kUnknown;
@@ -83,9 +87,15 @@ bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, mo
       }
     }
 
-    models::DictionaryWord dict_word{.word_with_pos = std::move(word_with_pos), .type = word_type};
-    const std::string_view word = models::GetWordFromWordWithPOS(dict_word.word_with_pos);
-    if (word.length() < 2) continue;  // Skip words that are too short
+    models::DictionaryWord dict_word{.word_with_pos = std::move(word_with_pos)};
+    const std::string_view word = dict_word.GetWord();
+
+    // Skip words that are too short
+    if (word.length() < 2) {
+      ++filtered_words;
+      continue;
+    }
+
     dict_word.embedding.resize(vector_size);
 
     // Read embedding values
@@ -101,23 +111,7 @@ bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, mo
       dict_word.embedding /= norm;
     }
 
-    // Store the word with its normalized embedding
-    const size_t word_idx = words_with_embeddings_.size();
     words_with_embeddings_.push_back(std::move(dict_word));
-    auto& ref = words_with_embeddings_[word_idx];
-    ref.word = models::GetWordFromWordWithPOS(ref.word_with_pos);
-    word_with_pos_index_[ref.word_with_pos] = word_idx;
-    word_to_words_with_pos_[ref.word].push_back(word_idx);
-    type_index_[ref.type].push_back(word_idx);
-
-    // If we're using embeddings as dictionary
-    if (load_dictionary_from_embeddings) {
-      if (!words_lookup_.contains(ref.word)) {
-        words_.push_back(ref.word);
-        words_lookup_.insert(ref.word);
-      }
-    }
-
     ++loaded_words;
 
     if (loaded_words % 10000 == 0) {
@@ -125,17 +119,28 @@ bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, mo
     }
   }
 
-  LOG_INFO() << "Successfully loaded " << words_with_embeddings_.size() << " word embeddings after filtering (skipped "
-             << filtered_words << " words that didn't match the filter)";
+  BuildIndices();
 
+  // If we're using embeddings as dictionary
   if (load_dictionary_from_embeddings) {
+    words_.clear();
+    words_lookup_.clear();
+
+    for (const auto& dict_word : words_with_embeddings_) {
+      const std::string_view word = dict_word.GetWord();
+      if (!words_lookup_.contains(word)) {
+        words_.push_back(word);
+        words_lookup_.insert(word);
+      }
+    }
+
     has_dedicated_dictionary_ = false;
     LOG_INFO() << "Using " << words_.size() << " words from embeddings as dictionary";
-  }
-
-  if (load_dictionary_from_embeddings) {
     words_.shrink_to_fit();
   }
+
+  LOG_INFO() << "Successfully loaded " << words_with_embeddings_.size() << " word embeddings after filtering (skipped "
+             << filtered_words << " words that didn't match the filter)";
 
   return !words_with_embeddings_.empty();
 }
@@ -242,7 +247,7 @@ float WordDictionary::CalculateSimilarity(std::string_view word1, std::string_vi
 
   // Both words have embeddings
   float similarity = dict_word1->CalculateSimilarity(*dict_word2);
-  if (dict_word1->type == dict_word2->type) similarity *= 1.1f;
+  if (dict_word1->GetType() == dict_word2->GetType()) similarity *= 1.1f;
   return std::clamp(similarity, 0.0f, 1.0f);
 }
 
@@ -429,7 +434,7 @@ std::vector<std::pair<const models::DictionaryWord*, float>> WordDictionary::Get
   similarities.reserve(words_with_embeddings_.size());
 
   for (const auto& other_word : words_with_embeddings_) {
-    if (other_word.word == dict_word->word) continue;  // Skip the same word
+    if (other_word.GetWord() == dict_word->GetWord()) continue;  // Skip the same word
     const float sim = dict_word->CalculateSimilarity(other_word);
     similarities.emplace_back(&other_word, sim);
   }
@@ -442,6 +447,30 @@ std::vector<std::pair<const models::DictionaryWord*, float>> WordDictionary::Get
   // Return top N results
   similarities.resize(std::min(count, similarities.size()));
   return similarities;
+}
+
+void WordDictionary::BuildIndices() {
+  word_with_pos_index_.clear();
+  word_to_words_with_pos_.clear();
+  type_index_.clear();
+
+  word_with_pos_index_.reserve(words_with_embeddings_.size());
+  word_to_words_with_pos_.reserve(words_with_embeddings_.size());
+
+  for (size_t i = 0; i < words_with_embeddings_.size(); ++i) {
+    const auto& dict_word = words_with_embeddings_[i];
+
+    // Index by the full word with POS
+    word_with_pos_index_[dict_word.word_with_pos] = i;
+
+    // Index by just the word part
+    const std::string_view word = dict_word.GetWord();
+    word_to_words_with_pos_[word].push_back(i);
+
+    // Index by word type
+    const models::WordType type = dict_word.GetType();
+    type_index_[type].push_back(i);
+  }
 }
 
 }  // namespace contexto

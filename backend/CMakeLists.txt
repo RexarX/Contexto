@@ -46,6 +46,6 @@ endif()
 # Now that all targets are created, we can set up the testsuite
 if(BUILD_TESTS)
     if(COMMAND add_contexto_testsuite)
-        #add_contexto_testsuite()
+        add_contexto_testsuite()
     endif()
 endif()
