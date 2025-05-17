@@ -26,6 +26,13 @@ interface AppState {
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) return envUrl;
+
+  // For production when running on the same domain, use relative URLs to avoid CORS issues
+  if (window.location.hostname !== "localhost") {
+    return ""; // Use relative URLs in production
+  }
+
+  // For local development
   return `${window.location.protocol}//${window.location.hostname}:8080`;
 })();
 
