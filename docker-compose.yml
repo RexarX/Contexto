@@ -2,6 +2,12 @@ services:
   backend:
     build: .
     container_name: contexto-backend
+    cap_add:
+      - SYS_PTRACE
+      - SYS_NICE
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
     volumes:
       - ./:/app
       - backend_build:/app/backend/build
@@ -13,7 +19,7 @@ services:
       - "8081:8080" # Changed external port to 8081 to avoid conflict
     networks:
       - app-network
-    command: /bin/bash -c "cd backend && ./scripts/build.sh --type Release --compiler gcc --build-system ninja --no-tests && ./scripts/run.sh --type Release"
+    command: /bin/bash -c "cd backend && ./scripts/build.sh --type ${BUILD_TYPE:-Release} --compiler gcc --build-system ninja --no-tests && ./scripts/run.sh --type ${BUILD_TYPE:-Release}"
 
   frontend:
     build: .

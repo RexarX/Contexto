@@ -1,8 +1,9 @@
+#include "contexto/give_up_handler.hpp"
 #include "contexto/guess_handler.hpp"
 #include "contexto/new_game_handler.hpp"
-#include "contexto/give_up_handler.hpp"
 #include "contexto/session_manager.hpp"
 #include "contexto/word_dictionary_component.hpp"
+#include "userver/server/handlers/exceptions.hpp"
 
 #include <userver/clients/dns/component.hpp>
 #include <userver/clients/http/component.hpp>
@@ -23,9 +24,8 @@ int main(int argc, char* argv[]) {
                             .Append<contexto::GuessHandler>()
                             .Append<contexto::GiveUpHandler>()
                             .Append<contexto::WordDictionaryComponent>();
-#ifndef RELEASE_MODE
+
   component_list.Append<userver::server::handlers::TestsControl>("tests-control");
-#endif
 
   return userver::utils::DaemonMain(argc, argv, component_list);
 }

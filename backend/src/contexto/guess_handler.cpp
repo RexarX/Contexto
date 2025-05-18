@@ -96,7 +96,7 @@ std::string GuessHandler::HandleRequestThrow(const userver::server::http::HttpRe
     ss << "Most similar words to target '" << target_word_with_pos << "': ";
     int count = 0;
     for (const auto& value : temp) {
-      if (++count > 10) break;
+      if (++count > 100) break;
       ss << "'" << value.first->word_with_pos << "'" << " (sim: " << value.second << "); ";
     }
 

@@ -4,29 +4,69 @@ import styled from "styled-components";
 
 interface GuessInputProps {
   onGuess: (word: string) => void;
-  onGiveUp: () => void; // Add this new prop
+  onGiveUp: () => void;
   disabled?: boolean;
+  layout: "desktop" | "mobile";
 }
 
 interface GuessInputState {
   guess: string;
 }
 
-const Form = styled.form`
+// Desktop-specific components
+const DesktopForm = styled.form`
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   width: 100%;
   margin: 0 auto;
 `;
 
-const NewGameBtn = styled(Button)`
+const DesktopInputWrapper = styled.div`
+  flex: 1;
+`;
+
+// Mobile-specific components
+const MobileForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   width: 100%;
-  margin-bottom: 16px; // Add margin to ensure visibility above assistant menu
+  margin: 0 auto;
+`;
+
+const MobileInputWrapper = styled.div`
+  width: 100%;
+`;
+
+const MobileButtonsWrapper = styled.div`
+  display: flex;
+  gap: 0.5rem;
+
+  button {
+    flex: 1;
+    height: 44px; // More touch-friendly
+  }
+`;
+
+// Common components - fixed without using layout prop
+const DesktopNewGameButton = styled(Button)`
+  width: 100%;
+  margin-bottom: 16px;
+  height: 48px;
+  font-size: 16px;
+`;
+
+const MobileNewGameButton = styled(Button)`
+  width: 100%;
+  margin-bottom: 16px;
+  height: 44px;
+  font-size: 15px;
 `;
 
 interface NewGameButtonProps {
   children: React.ReactNode;
   onClick: () => void;
+  layout?: "desktop" | "mobile";
 }
 
 export class GuessInput extends React.Component<
@@ -36,11 +76,17 @@ export class GuessInput extends React.Component<
   static NewGameButton: React.FC<NewGameButtonProps> = ({
     children,
     onClick,
-  }) => (
-    <NewGameBtn view="success" onClick={onClick}>
-      {children}
-    </NewGameBtn>
-  );
+    layout = "desktop",
+  }) =>
+    layout === "desktop" ? (
+      <DesktopNewGameButton view="success" onClick={onClick}>
+        {children}
+      </DesktopNewGameButton>
+    ) : (
+      <MobileNewGameButton view="success" onClick={onClick}>
+        {children}
+      </MobileNewGameButton>
+    );
 
   constructor(props: GuessInputProps) {
     super(props);
@@ -66,27 +112,71 @@ export class GuessInput extends React.Component<
   };
 
   render(): React.ReactNode {
-    return (
-      <>
-        <Form onSubmit={this.handleSubmit}>
-          <TextField
-            placeholder="Введите слово"
-            value={this.state.guess}
-            onChange={this.handleChange}
-            disabled={this.props.disabled}
-            required
-            autoFocus
-          />
-          <Button type="submit" view="primary" disabled={this.props.disabled}>
+    const { layout, disabled } = this.props;
+
+    if (layout === "desktop") {
+      return (
+        <DesktopForm onSubmit={this.handleSubmit}>
+          <DesktopInputWrapper>
+            <TextField
+              placeholder="Введите слово"
+              value={this.state.guess}
+              onChange={this.handleChange}
+              disabled={disabled}
+              required
+              autoFocus
+              style={{ width: "100%" }}
+            />
+          </DesktopInputWrapper>
+
+          <Button
+            type="submit"
+            view="primary"
+            disabled={disabled}
+            style={{ height: "48px", minWidth: "120px" }}
+          >
             Угадать
           </Button>
-          {!this.props.disabled && (
-            <Button view="warning" onClick={this.handleGiveUp}>
+
+          {!disabled && (
+            <Button
+              view="warning"
+              onClick={this.handleGiveUp}
+              style={{ height: "48px", minWidth: "120px" }}
+            >
               Сдаться
             </Button>
           )}
-        </Form>
-      </>
-    );
+        </DesktopForm>
+      );
+    } else {
+      return (
+        <MobileForm onSubmit={this.handleSubmit}>
+          <MobileInputWrapper>
+            <TextField
+              placeholder="Введите слово"
+              value={this.state.guess}
+              onChange={this.handleChange}
+              disabled={disabled}
+              required
+              autoFocus
+              style={{ width: "100%" }}
+            />
+          </MobileInputWrapper>
+
+          <MobileButtonsWrapper>
+            <Button type="submit" view="primary" disabled={disabled} size="s">
+              Угадать
+            </Button>
+
+            {!disabled && (
+              <Button view="warning" onClick={this.handleGiveUp} size="s">
+                Сдаться
+              </Button>
+            )}
+          </MobileButtonsWrapper>
+        </MobileForm>
+      );
+    }
   }
 }

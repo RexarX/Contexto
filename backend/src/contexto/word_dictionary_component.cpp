@@ -82,82 +82,114 @@ WordDictionaryComponent::WordDictionaryComponent(const userver::components::Comp
   LOG_INFO() << "Dictionary loaded with " << dictionary_.DictionarySize() << " words";
 }
 
-std::optional<int> WordDictionaryComponent::CalculateRank(std::string_view guessed_word, std::string_view target_word) const {
+std::optional<int> WordDictionaryComponent::CalculateRank(std::string_view guessed_word,
+                                                          std::string_view target_word) const {
   if (!models::WordHasPOS(target_word)) {
     LOG_ERROR() << "Failed to calculate rank: target_word '" << target_word << "' must have a POS";
     return std::nullopt;
   }
 
-  if (guessed_word == models::GetWordFromWordWithPOS(target_word)) return 1;
+  const std::string_view target_only_word = models::GetWordFromWordWithPOS(target_word);
 
-  const auto calculate_rank = [](float similarity) constexpr noexcept -> int {
-    // - Very high similarity (0.9-1.0): ranks 2-10
-    // - High similarity (0.8-0.9): ranks 11-50
-    // - Good similarity (0.7-0.8): ranks 51-150
-    // - Medium similarity (0.6-0.7): ranks 151-300
-    // - Moderate similarity (0.5-0.6): ranks 301-500
-    // - Low similarity (0.4-0.5): ranks 501-700
-    // - Very low similarity (0.0-0.4): ranks 701-1000
-    int rank = 0;
+  // If the words match (ignoring POS), it's rank 1
+  if (guessed_word == target_only_word) return 1;
 
-    if (similarity == 1.0f) {
-      return 1;
-    } else if (similarity >= 0.9f) {
-      // Very high similarity: scale between 2-10
-      rank = static_cast<int>(2 + (1.0f - similarity) * 8 / 0.1f);
-    } else if (similarity >= 0.8f) {
-      // High similarity: scale between 11-50
-      rank = static_cast<int>(11 + (0.9f - similarity) * 39 / 0.1f);
-    } else if (similarity >= 0.7f) {
-      // Good similarity: scale between 51-150
-      rank = static_cast<int>(51 + (0.8f - similarity) * 99 / 0.1f);
-    } else if (similarity >= 0.6f) {
-      // Medium similarity: scale between 151-300
-      rank = static_cast<int>(151 + (0.7f - similarity) * 149 / 0.1f);
-    } else if (similarity >= 0.5f) {
-      // Moderate similarity: scale between 301-500
-      rank = static_cast<int>(301 + (0.6f - similarity) * 199 / 0.1f);
-    } else if (similarity >= 0.4f) {
-      // Low similarity: scale between 501-700
-      rank = static_cast<int>(501 + (0.5f - similarity) * 199 / 0.1f);
-    } else if (similarity > 0.0f) {
-      // Very low similarity: scale between 701-999
-      rank = static_cast<int>(701 + (0.4f - std::min(0.4f, similarity)) * 298 / 0.4f);
-    } else {
-      // Zero or negative similarity
-      rank = kMaxRank;
-    }
-
-    // Ensure rank is within bounds
-    return std::clamp(rank, 2, kMaxRank);
-  };
-
+  // Calculate cosine similarity
+  float cosine_sim = 0.0f;
   if (models::WordHasPOS(guessed_word)) {
-    const float similarity = dictionary_.CalculateSimilarity(guessed_word, target_word);
-    if (similarity == -1.0f) {
-      LOG_ERROR() << "Failed to calculate similarity for '" << guessed_word << "' and '" << target_word << "'";
-      return std::nullopt;
+    cosine_sim = dictionary_.CalculateSimilarity(guessed_word, target_word);
+  } else {
+    // Find best POS variant
+    float best_sim = -1.0f;
+    const auto indices = dictionary_.GetIndicesToWordPOSVariations(guessed_word);
+    for (const size_t index : indices) {
+      const models::DictionaryWord& dictionary_word = dictionary_.GetWordWithEmbeddingByIndex(index);
+      const float curr_sim = dictionary_.CalculateSimilarity(dictionary_word.word_with_pos, target_word);
+      if (curr_sim > best_sim) {
+        best_sim = curr_sim;
+      }
     }
-    return calculate_rank(similarity);
+    cosine_sim = best_sim;
   }
 
-  int min_rank = std::numeric_limits<int>::max();
-  const auto indices = dictionary_.GetIndicesToWordPOSVariations(guessed_word);
-  for (const size_t index : indices) {
-    const models::DictionaryWord& dictionary_word = dictionary_.GetWordWithEmbeddingByIndex(index);
-    const float similarity = dictionary_.CalculateSimilarity(dictionary_word.word_with_pos, target_word);
-    if (similarity == -1.0f) {
-      LOG_ERROR() << "Failed to calculate similarity for '" << dictionary_word.word_with_pos << "' and '" << target_word
-                  << "'";
-      return -1;
-    }
-
-    const int rank = calculate_rank(similarity);
-    min_rank = std::min(min_rank, rank);
+  if (cosine_sim == -1.0f) {
+    LOG_ERROR() << "Failed to calculate similarity";
+    return std::nullopt;
   }
 
-  if (min_rank == std::numeric_limits<int>::max()) return std::nullopt;
-  return  min_rank;
+  const size_t prefix_length = utils::utf8::CommonPrefixLength(guessed_word, target_only_word);
+  const size_t min_word_length =
+      std::min(utils::utf8::CharCount(guessed_word), utils::utf8::CharCount(target_only_word));
+
+  // Longer prefixes relative to word length indicate likely shared roots
+  // Calculate as a ratio but with higher weight for longer prefixes (up to 5 chars)
+  const size_t effective_prefix = std::min(prefix_length, size_t(5));
+  float prefix_score = static_cast<float>(effective_prefix) / std::min(size_t(5), min_word_length);
+  prefix_score = std::min(1.0f, prefix_score);  // Cap at 1.0
+
+  // Check for shared root - if prefix is substantial (>= 4 chars or >50% of shorter word)
+  const bool likely_shared_root =
+      (prefix_length >= 4 || (prefix_length > 0 && prefix_length >= min_word_length * 0.5f));
+
+  // Boost similarity score for words with likely shared roots
+  float morphological_bonus = 0.0f;
+  if (likely_shared_root) {
+    // Apply stronger bonus for words with longer shared prefixes
+    morphological_bonus = 0.15f * prefix_score;
+  }
+
+  // Semantic similarity (from embeddings) is most important, but morphology matters too
+  const float combined_similarity = (cosine_sim * 0.8f) + (prefix_score * 0.2f) + morphological_bonus;
+
+  // Map combined similarity to rank using a smoother distribution curve
+  int rank = 0;
+
+  // Very similar words (likely almost synonyms)
+  if (combined_similarity >= 0.95f) {
+    rank = static_cast<int>(2 + (1.0f - combined_similarity) * 13 / 0.05f);
+  }
+  // Highly similar words
+  else if (combined_similarity >= 0.85f) {
+    rank = static_cast<int>(15 + (0.95f - combined_similarity) * 35 / 0.1f);
+  }
+  // Moderately similar words
+  else if (combined_similarity >= 0.75f) {
+    rank = static_cast<int>(50 + (0.85f - combined_similarity) * 50 / 0.1f);
+  }
+  // Somewhat related words
+  else if (combined_similarity >= 0.65f) {
+    rank = static_cast<int>(100 + (0.75f - combined_similarity) * 100 / 0.1f);
+  }
+  // Loosely related words
+  else if (combined_similarity >= 0.55f) {
+    rank = static_cast<int>(200 + (0.65f - combined_similarity) * 200 / 0.1f);
+  }
+  // Words with minor relations
+  else if (combined_similarity >= 0.45f) {
+    rank = static_cast<int>(400 + (0.55f - combined_similarity) * 200 / 0.1f);
+  }
+  // Distantly related words
+  else if (combined_similarity >= 0.35f) {
+    rank = static_cast<int>(600 + (0.45f - combined_similarity) * 200 / 0.1f);
+  }
+  // Barely related words
+  else {
+    rank = static_cast<int>(800 + (0.35f - std::max(0.0f, combined_similarity)) * 199 / 0.35f);
+  }
+
+  // Apply special case handling for words with same root but different forms
+  if (likely_shared_root && prefix_length >= 5) {
+    // Cap rank for words that clearly share the same root
+    // (like предвзятый/предвзятость)
+    rank = std::min(rank, 150);
+  }
+
+  LOG_DEBUG() << "Word: " << guessed_word << ", Target: " << target_only_word << ", Cosine: " << cosine_sim
+              << ", Prefix score: " << prefix_score << ", Morph bonus: " << morphological_bonus
+              << ", Combined: " << combined_similarity << ", Shared root: " << (likely_shared_root ? "yes" : "no")
+              << ", Final rank: " << rank;
+
+  return std::clamp(rank, 2, kMaxRank);
 }
 
 std::vector<models::Word> WordDictionaryComponent::GetSimilarWords(std::string_view word,

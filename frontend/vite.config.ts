@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src"),
+      "@": resolve(__dirname, "./src"),
     },
   },
   server: {
@@ -21,11 +21,9 @@ export default defineConfig({
     },
   },
   build: {
-    // Add more robust error handling for production builds
     sourcemap: true,
     rollupOptions: {
       onwarn(warning, warn) {
-        // Ignore certain warnings
         if (warning.code === "THIS_IS_UNDEFINED") return;
         warn(warning);
       },

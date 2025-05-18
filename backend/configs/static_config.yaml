@@ -27,7 +27,7 @@ components_manager:
       dictionary-preferred-word-type: noun
 
     tests-control:
-      load-enabled: true
+      load-enabled: false
       path: /tests/{action}
       task_processor: main-task-processor
       method: POST
@@ -44,7 +44,7 @@ components_manager:
 
         session-logger:
           file_path: logs/session.log
-          level: debug
+          level: info
           overflow_behavior: discard
 
         http-logger:
@@ -70,19 +70,19 @@ components_manager:
       path: /api/new-game
       method: POST
       task_processor: main-task-processor
-      log-level: DEBUG
+      log-level: INFO
 
     contexto-guess-handler:
       path: /api/guess
       method: POST
       task_processor: main-task-processor
-      log-level: DEBUG
+      log-level: INFO
 
     contexto-give-up-handler:
       path: /api/give-up
       method: POST
       task_processor: main-task-processor
-      log-level: DEBUG
+      log-level: INFO
 
     ping:
       path: /ping

@@ -23,9 +23,10 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src", "env.d.ts"],
+  "include": ["src", "src/utils", "env.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

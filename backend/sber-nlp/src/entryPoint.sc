@@ -23,7 +23,6 @@ theme: /
         a: Игра Contexto началась! Попробуйте угадать секретное слово.
 
         script:
-            newGame($context);
             addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
 
     state: GameStatus

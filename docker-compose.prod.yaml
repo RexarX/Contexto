@@ -13,7 +13,7 @@ services:
       - "8080"
     networks:
       - app-network
-    command: /bin/bash -c "cd backend && ./scripts/build.sh --type Release --compiler gcc --build-system ninja --no-tests && ./scripts/run.sh --type Release"
+    command: /bin/bash -c "cd backend && ./scripts/build.sh --type ${BUILD_TYPE:-Release} --compiler gcc --build-system ninja --no-tests && ./scripts/run.sh --type ${BUILD_TYPE:-Release}"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]

@@ -19,7 +19,6 @@ public:
                           const userver::components::ComponentContext& context);
 
   bool ValidateWord(std::string_view word) const {
-    LOG_WARNING() << "111111111111111111111 | " << word;
     if (word.empty()) return false;
     return dictionary_.ContainsWord(word);
   }

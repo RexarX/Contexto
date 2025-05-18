@@ -141,6 +141,18 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${EIGEN3_INCLUDE_DIR}
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Debug>:
+        DEBUG_MODE
+    >
+    $<$<CONFIG:RelWithDebInfo>:
+        RELEASE_WITH_DEDUG_INFO_MODE
+    >
+    $<$<CONFIG:Release>:
+        RELEASE_MODE
+    >
+)
+
 foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     string(TOUPPER ${OUTPUTCONFIG} UPOUTPUTCONFIG)
     set_target_properties(${PROJECT_NAME} PROPERTIES

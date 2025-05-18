@@ -9,7 +9,7 @@ interface VoiceFeedbackProps {
 
 const StyledToast = styled.div<{ type: string }>`
   position: fixed;
-  bottom: 30px;
+  bottom: 190px; // Increased from 30px to be above assistant
   right: 30px;
   background-color: ${(props) =>
     props.type === "error"

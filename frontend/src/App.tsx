@@ -14,6 +14,7 @@ import {
   GameState,
   AssistantEventStart,
 } from "./types";
+import logger from "./logger-init";
 
 interface AppState {
   gameState: GameState;
@@ -21,6 +22,7 @@ interface AppState {
     text: string;
     type: "feedback" | "error" | "success";
   };
+  gameInitialized: boolean; // Add this flag to track if game has been initialized
 }
 
 const API_BASE_URL = (() => {
@@ -53,23 +55,25 @@ const initializeAssistant = (getState: () => AssistantAppState) => {
       return createAssistant({ getState });
     }
   } catch (error) {
-    console.warn("Failed to initialize assistant:", error);
+    logger.warn("Failed to initialize assistant:", error);
     return null;
   }
 };
 
 export class App extends React.Component<Record<string, never>, AppState> {
   private assistant: ReturnType<typeof createAssistant> | null = null;
+  private gameInitializing = false;
 
   constructor(props: Record<string, never>) {
     super(props);
-    console.log("constructor");
+    logger.log("constructor");
 
     this.state = {
       gameState: {
         guessedWords: [],
         gameOver: false,
       },
+      gameInitialized: false,
     };
 
     // Try to initialize assistant, but don't fail if it doesn't work
@@ -80,49 +84,51 @@ export class App extends React.Component<Record<string, never>, AppState> {
         this.assistant.on("data", this.handleAssistantData);
         this.assistant.on("start", this.handleAssistantStart);
         this.assistant.on("command", (event) => {
-          console.log(`assistant.on(command)`, event);
+          logger.log(`assistant.on(command)`, event);
         });
         this.assistant.on("error", (event) => {
-          console.log(`assistant.on(error)`, event);
+          logger.log(`assistant.on(error)`, event);
         });
       }
     } catch (error) {
-      console.warn("Error setting up assistant:", error);
+      logger.warn("Error setting up assistant:", error);
       this.assistant = null;
     }
   }
 
   componentDidMount() {
-    // Start a new game as soon as the component mounts, regardless of assistant
-    this.startNewGame();
+    // Only start a new game if one hasn't been initialized yet
+    if (!this.state.gameInitialized && !this.gameInitializing) {
+      this.startNewGame();
+    }
   }
 
   handleAssistantData = (event: AssistantEvent) => {
-    console.log(`assistant.on(data)`, event);
+    logger.log(`assistant.on(data)`, event);
     if (event.type === "character") {
-      console.log(`assistant.on(data): character: "${event.character?.id}"`);
+      logger.log(`assistant.on(data): character: "${event.character?.id}"`);
     } else if (event.type === "insets") {
-      console.log(`assistant.on(data): insets`);
+      logger.log(`assistant.on(data): insets`);
     } else if (event.action) {
       this.dispatchAssistantAction(event.action);
     }
   };
 
   handleAssistantStart = ((event: AssistantEventStart) => {
-    console.log(`assistant.on(start)`, event);
+    logger.log(`assistant.on(start)`, event);
 
     if (this.assistant) {
       try {
         const initialData = this.assistant.getInitialData();
-        console.log(`assistant initial data:`, initialData);
+        logger.log(`assistant initial data:`, initialData);
       } catch (error) {
-        console.warn("Could not get initial data:", error);
+        logger.warn("Could not get initial data:", error);
       }
     }
   }) as any;
 
   getStateForAssistant(): AssistantAppState {
-    console.log("getStateForAssistant: this.state:", this.state);
+    logger.log("getStateForAssistant: this.state:", this.state);
 
     const state: AssistantAppState = {
       item_selector: {
@@ -147,14 +153,14 @@ export class App extends React.Component<Record<string, never>, AppState> {
       game_state: this.state.gameState,
     };
 
-    console.log("getStateForAssistant: state:", state);
+    logger.log("getStateForAssistant: state:", state);
     return state;
   }
 
   dispatchAssistantAction(action: AssistantAction): Promise<void> {
-    console.log("dispatchAssistantAction", action);
+    logger.log("dispatchAssistantAction", action);
     if (action) {
-      console.log(
+      logger.log(
         "dispatchAssistantAction: Received action:",
         JSON.stringify(action, null, 2),
       );
@@ -163,15 +169,15 @@ export class App extends React.Component<Record<string, never>, AppState> {
           return this.startNewGame();
 
         case "guess_word":
-          console.log(
+          logger.log(
             "dispatchAssistantAction: case 'guess_word', action.word:",
             action.word,
           );
           if (action.word) {
-            console.log("Making guess with word:", action.word);
+            logger.log("Making guess with word:", action.word);
             return this.makeGuess(action);
           } else {
-            console.warn(
+            logger.warn(
               "dispatchAssistantAction: 'guess_word' action received without a word.",
             );
             this.sendActionValue(
@@ -188,7 +194,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
           return Promise.resolve();
 
         default:
-          console.error(`Unhandled action type: ${action.type}`);
+          logger.error(`Unhandled action type: ${action.type}`);
           return Promise.resolve();
       }
     }
@@ -196,6 +202,9 @@ export class App extends React.Component<Record<string, never>, AppState> {
   }
 
   startNewGame = async (): Promise<void> => {
+    if (this.gameInitializing) return;
+
+    this.gameInitializing = true;
     try {
       this.setState({
         gameState: {
@@ -204,9 +213,10 @@ export class App extends React.Component<Record<string, never>, AppState> {
           userGaveUp: false,
         },
         feedbackMessage: undefined,
+        gameInitialized: true,
       });
 
-      console.log(`Fetching from: ${API_BASE_URL}/api/new-game`);
+      logger.log(`Fetching from: ${API_BASE_URL}/api/new-game`);
 
       const response = await fetch(`${API_BASE_URL}/api/new-game`, {
         method: "POST",
@@ -219,7 +229,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
       const data = await response.json();
 
       if (data.error) {
-        console.error("Error starting new game:", data.error);
+        logger.error("Error starting new game:", data.error);
         this.setState({
           feedbackMessage: {
             text: `Ошибка при создании новой игры: ${data.error}`,
@@ -234,20 +244,22 @@ export class App extends React.Component<Record<string, never>, AppState> {
         localStorage.setItem("Contexto_session_id", data.session_id);
       }
 
-      console.log("New game started with session:", data.session_id);
+      logger.log("New game started with session:", data.session_id);
     } catch (error) {
-      console.error("Error starting new game:", error);
+      logger.error("Error starting new game:", error);
       this.setState({
         feedbackMessage: {
           text: "Ошибка при создании новой игры. Пожалуйста, проверьте подключение к серверу.",
           type: "error",
         },
       });
+    } finally {
+      this.gameInitializing = false;
     }
   };
 
   async makeGuess(action: AssistantAction): Promise<void> {
-    console.log("makeGuess", action);
+    logger.log("makeGuess", action);
     if (action.word && !this.state.gameState.gameOver) {
       if (action.word) {
         return this.guessWord(action.word);
@@ -258,7 +270,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
 
   guessWord = async (word: string): Promise<void> => {
     word = word.trim().toLocaleLowerCase();
-    console.log("guessWord", word);
+    logger.log("guessWord", word);
     try {
       const storedSessionId = localStorage.getItem("Contexto_session_id");
 
@@ -287,12 +299,12 @@ export class App extends React.Component<Record<string, never>, AppState> {
         return;
       }
 
-      console.log("Backend response for guess:", data);
+      logger.log("Backend response for guess:", data);
 
       // Ensure rank is a number
       const rankAsNumber = parseInt(String(data.rank), 10);
       if (isNaN(rankAsNumber)) {
-        console.error("Received non-numeric rank from backend:", data.rank);
+        logger.error("Received non-numeric rank from backend:", data.rank);
         // Handle error or set a default rank
       }
 
@@ -317,7 +329,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
       // Sort by rank (similarity to target word)
       newGuessedWords.sort((a, b) => a.rank - b.rank);
 
-      console.log("New guess with rank:", data.rank);
+      logger.log("New guess with rank:", data.rank);
 
       // Check if the guess is correct (rank 1)
       const isCorrect = data.rank === 1;
@@ -334,9 +346,6 @@ export class App extends React.Component<Record<string, never>, AppState> {
       if (isCorrect) {
         const successMessage = "Поздравляем! Вы угадали секретное слово!";
         this.sendActionValue("success", successMessage);
-        this.setState({
-          feedbackMessage: { text: successMessage, type: "success" },
-        });
       } else {
         // Provide feedback on how close they are
         let feedback = "Очень далеко";
@@ -344,17 +353,14 @@ export class App extends React.Component<Record<string, never>, AppState> {
           feedback = "Очень близко!";
         } else if (data.rank <= 100) {
           feedback = "Теплее!";
-        } else if (data.rank <= 200) {
+        } else if (data.rank <= 250) {
           feedback = "Холоднее";
         }
 
         this.sendActionValue("feedback", feedback);
-        this.setState({
-          feedbackMessage: { text: feedback, type: "feedback" },
-        });
       }
     } catch (error) {
-      console.error("Error making guess:", error);
+      logger.error("Error making guess:", error);
       const errorMessage = "Произошла ошибка при проверке слова";
       this.sendActionValue("error", errorMessage);
       this.setState({ feedbackMessage: { text: errorMessage, type: "error" } });
@@ -395,12 +401,6 @@ export class App extends React.Component<Record<string, never>, AppState> {
             targetWord: data.target_word,
             userGaveUp: true,
           },
-          feedbackMessage: {
-            text:
-              "Не расстраивайтесь, в следующий раз обязательно получится! Загаданное слово было: " +
-              data.target_word,
-            type: "feedback",
-          },
         });
 
         this.sendActionValue(
@@ -409,7 +409,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
         );
       }
     } catch (error) {
-      console.error("Error giving up:", error);
+      logger.error("Error giving up:", error);
       this.setState({
         feedbackMessage: {
           text: "Произошла ошибка при получении ответа",
@@ -421,7 +421,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
 
   private sendActionValue(action_id: string, value: string): void {
     if (!this.assistant) {
-      console.log("Assistant not initialized, skipping sendActionValue");
+      logger.log("Assistant not initialized, skipping sendActionValue");
       return;
     }
 
@@ -435,19 +435,19 @@ export class App extends React.Component<Record<string, never>, AppState> {
 
       this.assistant.sendData(data, (assistantData: any) => {
         const { type, payload } = assistantData || {};
-        console.log("sendData onData:", type, payload);
+        logger.log("sendData onData:", type, payload);
       });
     } catch (error) {
-      console.warn("Error sending action to assistant:", error);
+      logger.warn("Error sending action to assistant:", error);
     }
   }
 
   render(): React.ReactNode {
-    console.log("render");
+    logger.log("render");
     return (
       <div
         style={{
-          paddingBottom: "100px",
+          paddingBottom: "180px",
           minHeight: "100vh",
         }}
       >

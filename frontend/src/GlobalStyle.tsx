@@ -26,9 +26,26 @@ export const GlobalStyle = createGlobalStyle`
   * {
     box-sizing: border-box;
     font-family: 'SB Sans Display', sans-serif;
+    -webkit-tap-highlight-color: transparent;
   }
 
   :root {
     ${darkSber}
+  }
+
+  /* Mobile optimizations */
+  input, button {
+    font-size: 16px !important; /* Prevent zoom on focus in iOS */
+  }
+
+  @media (max-width: 768px) {
+    /* Better button/input sizes for touch */
+    button,
+    [role="button"],
+    input[type="submit"],
+    input[type="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 `;
