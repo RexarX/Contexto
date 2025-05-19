@@ -1,8 +1,7 @@
 theme: /
 
     state: GuessWord
-        q!: {(это|я думаю|я считаю|попробую|давай|может|может быть|возможно) [слово] * $Number::anyText}
-        q!: {(это|я думаю|я считаю|попробую|давай|может|может быть|возможно) [слово] * $String::anyText}
+        q!: * {(слово|это|угадай|проверь|это слово|угадай слово|проверь слово) $String::anyText}
 
         script:
             log('guessWord: context: ' + JSON.stringify($context));
@@ -13,11 +12,25 @@ theme: /
                 return;
             }
 
-            // Ensure the word is processed correctly
-            var guess = $request.query;
+            // Extract the word from the phrase
+            var fullText = $request.query;
+            var guess = extractWordFromPhrase(fullText);
+
             if (guess) {
                 guess = guess.trim();
                 guessWord(guess, $context);
             } else {
-                $reactions.answer("Не расслышал слово, повторите пожалуйста.");
+                $reactions.answer("Не расслышал слово, повторите пожалуйста. Скажите 'слово [ваше слово]'.");
+            }
+
+    state: InvalidGuessFormat
+        q!: $String
+
+        script:
+            var text = $request.query;
+            if (text && text.length > 1 && !isSystemPhrase(text)) {
+                $reactions.answer("Чтобы угадать слово, скажите 'слово [ваше слово]' или 'проверь [ваше слово]'.");
+                addSuggestions(["Помощь", "Правила", "Новая игра"], $context);
+            } else {
+                $reactions.transition("/Fallback");
             }

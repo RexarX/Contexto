@@ -103,6 +103,8 @@ function isSystemPhrase(text) {
     "да",
     "нет",
     "отмена",
+    "правила",
+    "подсказка"
   ];
 
   for (var i = 0; i < systemPhrases.length; i++) {

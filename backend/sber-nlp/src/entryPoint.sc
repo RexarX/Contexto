@@ -10,6 +10,7 @@ require: sc/guessWord.sc
 require: sc/newGame.sc
 require: sc/giveUp.sc
 require: sc/rules.sc
+require: sc/help.sc
 
 patterns:
     $AnyText = $nonEmptyGarbage
@@ -20,10 +21,22 @@ theme: /
     state: Start
         q!: $regex</start>
         q!: (запусти|открой|вруби) [игру] [в] contexto
-        a: Игра Contexto началась! Попробуйте угадать секретное слово.
+        a: Начинаем игру Contexto! Чтобы узнать, как играть, скажите "помощь".
 
         script:
-            addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
+            addSuggestions(["Помощь", "Правила", "Новая игра"], $context);
+
+    state: StartGame
+        q!: (начать|начни|начинай|давай|поехали|старт|стартуй) [новую|новый] [игру|раунд]
+        q!: начать игру
+
+        script:
+            startGame($context);
+
+        a: Игра началась!
+
+        script:
+            addSuggestions(["Правила", "Новая игра", "Сдаюсь"], $context);
 
     state: GameStatus
         q!: [как] [мои|у меня] [дела|результаты|прогресс]
@@ -35,13 +48,13 @@ theme: /
             if (stats.gameOver) {
                 $reactions.answer("Вы уже выиграли эту игру! Скажите 'новая игра', чтобы начать заново.");
             } else if (stats.guessCount == 0) {
-                $reactions.answer("Вы еще не назвали ни одного слова. Просто скажите любое слово, чтобы начать игру.");
+                $reactions.answer("Вы еще не назвали ни одного слова. Чтобы угадать слово, скажите 'слово [ваше слово]'.");
             } else {
                 var message = getEncouragingMessage(stats);
                 $reactions.answer("Вы уже проверили " + stats.guessCount + " слов. " + message);
             }
 
-            addSuggestions(["Правила", "Новая игра"], $context);
+            addSuggestions(["Помощь", "Правила", "Новая игра"], $context);
 
     state: Fallback
         event!: noMatch
@@ -52,16 +65,11 @@ theme: /
 
             // Only process non-empty inputs
             if (userInput && userInput.length > 1) {
-                // Check if it's a system phrase
-                if (isSystemPhrase(userInput)) {
-                    $reactions.answer("Не совсем понимаю. Попробуйте назвать слово для проверки или скажите 'правила' для информации об игре.");
-                    addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
-                } else {
-                    // Process as word guess - only show the processing message
-                    guessWord(userInput, $context);
-                }
+                // Now we don't try to process every input as a word guess
+                $reactions.answer("Я не понимаю эту команду. Скажите 'помощь', чтобы узнать доступные команды.");
             } else {
                 // Very short or empty input
-                $reactions.answer("Я не понимаю. Попробуйте угадать слово или скажите \"новая игра\".");
-                addSuggestions(["Правила", "Подсказка", "Новая игра"], $context);
+                $reactions.answer("Я не понимаю. Попробуйте угадать слово, сказав 'слово [ваше слово]' или скажите 'помощь'.");
             }
+
+            addSuggestions(["Помощь", "Правила", "Новая игра"], $context);

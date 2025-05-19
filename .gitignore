@@ -51,7 +51,8 @@ node_modules/
 .cache/
 
 # Environment files
-frontend/.env
+.env
+.venv
 
 # Log files
 *.log
