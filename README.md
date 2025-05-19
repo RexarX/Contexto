@@ -67,8 +67,9 @@ Contexto is a word-guessing game where players have to find the secret word with
 
 ```sh
 # Clone the repository with submodules
-git clone https://github.com/RexarX/Contexto.git && git submodule update --init --recursive
+git clone https://github.com/RexarX/Contexto.git
 cd Contexto
+git submodule update --init --recursive
 
 # Build and start with Docker
 make docker-build
