@@ -289,11 +289,20 @@ export class App extends React.Component<Record<string, never>, AppState> {
 
       // Only add if the word doesn't already exist
       if (!wordExists) {
-        newGuessedWords.push({
-          id: crypto.randomUUID(),
+        const newWord = {
+          id: crypto.randomUUID(), // Generate a unique ID
           text: word,
           rank: isNaN(rankAsNumber) ? -1 : rankAsNumber,
+          isNew: true, // Mark this as the new word
+        };
+
+        // First, remove the isNew flag from any existing words
+        newGuessedWords.forEach((existingWord) => {
+          if (existingWord.isNew) delete existingWord.isNew;
         });
+
+        // Then add the new word with the isNew flag
+        newGuessedWords.push(newWord);
       }
 
       // Sort by rank (similarity to target word)

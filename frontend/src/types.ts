@@ -2,6 +2,7 @@ export interface Word {
   id: string;
   text: string;
   rank: number; // Position in similarity list
+  isNew?: boolean;
 }
 
 export interface GameState {

@@ -218,16 +218,20 @@ export const WordsList: React.FC<WordsListProps> = ({
 
   useEffect(() => {
     if (words.length > 0) {
-      const latestWord = words[words.length - 1];
-      setLastAddedWordId(latestWord.id);
+      // Find the word marked as new
+      const newWord = words.find((word) => word.isNew);
+      if (newWord) {
+        setLastAddedWordId(newWord.id);
 
-      const timer = setTimeout(() => {
-        setLastAddedWordId(null);
-      }, 1500);
+        // Clear the highlighting after animation completes
+        const timer = setTimeout(() => {
+          setLastAddedWordId(null);
+        }, 1500);
 
-      return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [words.length]);
+  }, [words]);
 
   const renderWordsList = () => {
     if (words.length === 0) {
