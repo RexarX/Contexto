@@ -9,7 +9,7 @@ export interface GameState {
   targetWord?: string;
   guessedWords: Word[];
   gameOver: boolean;
-  userGaveUp?: boolean; // Add this flag
+  userGaveUp?: boolean;
 }
 
 export interface AssistantState {
@@ -28,6 +28,7 @@ export interface AssistantAction {
   type: string;
   word?: string;
   id?: string;
+  error_message?: string;
 }
 
 export interface AssistantEvent {
@@ -36,6 +37,10 @@ export interface AssistantEvent {
     id: string;
   };
   action?: AssistantAction;
+  smart_app_data?: {
+    action: AssistantAction;
+    sdk_meta?: any;
+  };
 }
 
 export interface AssistantSmartAppData<T = any> {

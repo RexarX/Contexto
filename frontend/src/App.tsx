@@ -242,30 +242,40 @@ export class App extends React.Component<Record<string, never>, AppState> {
         credentials: "include",
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        logger.error("Failed to parse response:", e);
+        data = { error: "Failed to parse response" };
       }
 
-      const data = await response.json();
-
-      if (data.error) {
-        // Check if the error is about an unknown word
+      if (!response.ok || data.error) {
+        // Specific handling for unknown words
         if (
-          data.error.includes("Invalid word") ||
-          data.error.includes("word not found")
+          data.error &&
+          (data.error.includes("Invalid word") ||
+            data.error.includes("word not found"))
         ) {
-          const errorMessage = "Я не знаю этого слова";
-          this.sendActionValue("error", errorMessage);
+          const errorMessage = `Я не знаю слова "${word}"`;
+
+          // Update UI
           this.setState({
             feedbackMessage: { text: errorMessage, type: "error" },
           });
-        } else {
-          // Handle other errors
-          this.sendActionValue("error", data.error);
-          this.setState({
-            feedbackMessage: { text: data.error, type: "error" },
-          });
+
+          // Send to assistant using the correct format
+          this.sendActionValue("unknown_word", word);
+
+          return;
         }
+
+        // Handle other errors
+        const errorMessage = data.error || `HTTP error: ${response.status}`;
+        this.sendActionValue("error", errorMessage);
+        this.setState({
+          feedbackMessage: { text: errorMessage, type: "error" },
+        });
         return;
       }
 
@@ -335,8 +345,6 @@ export class App extends React.Component<Record<string, never>, AppState> {
         } else if (data.rank <= 250) {
           feedback = "Холоднее";
         }
-
-        this.sendActionValue("feedback", feedback);
       }
     } catch (error) {
       logger.error("Error making guess:", error);
@@ -415,6 +423,10 @@ export class App extends React.Component<Record<string, never>, AppState> {
         case "get_hint":
           return Promise.resolve();
 
+        case "log":
+          logger.log(action.word);
+          return Promise.resolve();
+
         default:
           logger.error(`Unhandled action type: ${action.type}`);
           return Promise.resolve();
@@ -431,6 +443,12 @@ export class App extends React.Component<Record<string, never>, AppState> {
       logger.log(`assistant.on(data): insets`);
     } else if (event.action) {
       this.dispatchAssistantAction(event.action);
+    } else if (
+      event.type === "smart_app_data" &&
+      event.smart_app_data?.action
+    ) {
+      // Handle actions that come through smart_app_data
+      this.dispatchAssistantAction(event.smart_app_data.action);
     }
   };
 
@@ -454,17 +472,25 @@ export class App extends React.Component<Record<string, never>, AppState> {
     }
 
     try {
-      const data: AssistantSendData = {
+      const data = {
         action: {
-          action_id,
-          parameters: { value },
+          action_id: action_id,
+          parameters: {
+            value: value,
+          },
         },
       };
 
-      this.assistant.sendData(data, (assistantData: any) => {
-        const { type, payload } = assistantData || {};
-        logger.log("sendData onData:", type, payload);
-      });
+      logger.log(`Sending action to assistant: ${action_id}, value: ${value}`);
+
+      const unsubscribe = this.assistant.sendData(
+        data,
+        (assistantData: any) => {
+          const { type, payload } = assistantData || {};
+          logger.log("sendData onData:", type, payload);
+          unsubscribe(); // Properly unsubscribe after handling the response
+        },
+      );
     } catch (error) {
       logger.warn("Error sending action to assistant:", error);
     }

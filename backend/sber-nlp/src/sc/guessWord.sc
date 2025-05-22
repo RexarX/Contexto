@@ -1,21 +1,18 @@
 theme: /
 
     state: GuessWord
-        q!: * {(слово|это|угадай|проверь|это слово|угадай слово|проверь слово) $String::anyText}
+        q!: * (слово|это|угадай|проверь|это слово|угадай слово|проверь слово) $GuessWord::word *
 
         script:
             log('guessWord: context: ' + JSON.stringify($context));
-            var request = get_request($context);
+            var request = getRequest($context);
 
             if (is_game_over(request)) {
                 $reactions.answer("Игра уже завершена. Скажите 'новая игра', чтобы начать заново.");
                 return;
             }
 
-            // Extract the word from the phrase
-            var fullText = $request.query;
-            var guess = extractWordFromPhrase(fullText);
-
+            var guess = $parseTree._word;
             if (guess) {
                 guess = guess.trim();
                 guessWord(guess, $context);
@@ -23,14 +20,10 @@ theme: /
                 $reactions.answer("Не расслышал слово, повторите пожалуйста. Скажите 'слово [ваше слово]'.");
             }
 
-    state: InvalidGuessFormat
-        q!: $String
-
+    state: UnknownWord
+        event!: unknown_word
         script:
-            var text = $request.query;
-            if (text && text.length > 1 && !isSystemPhrase(text)) {
-                $reactions.answer("Чтобы угадать слово, скажите 'слово [ваше слово]' или 'проверь [ваше слово]'.");
-                addSuggestions(["Помощь", "Правила", "Новая игра"], $context);
-            } else {
-                $reactions.transition("/Fallback");
+            var eventData = getEventData($context);
+            if (eventData.value) {
+                $reactions.answer("Я не знаю слова \"" + eventData.value + "\". Попробуйте другое слово.");
             }

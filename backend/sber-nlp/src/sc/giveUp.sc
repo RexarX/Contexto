@@ -7,7 +7,7 @@ theme: /
 
         script:
             log('giveUp: context: ' + JSON.stringify($context));
-            var request = get_request($context);
+            var request = getRequest($context);
 
             if (is_game_over(request)) {
                 $reactions.answer("Игра уже завершена. Скажите 'новая игра', чтобы начать заново.");

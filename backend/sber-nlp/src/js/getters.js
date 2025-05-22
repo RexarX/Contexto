@@ -1,4 +1,4 @@
-function get_request(context) {
+function getRequest(context) {
   if (context && context.request) return context.request.rawRequest;
   return {};
 }
@@ -11,6 +11,13 @@ function get_server_action(request) {
     request.payload.data.server_action
   ) {
     return request.payload.data.server_action;
+  }
+  return {};
+}
+
+function getEventData(context) {
+  if (context && context.request && context.request.data && context.request.data.eventData) {
+    return context.request.data.eventData;
   }
   return {};
 }
@@ -96,7 +103,7 @@ function isSystemPhrase(text) {
   var systemPhrases = [
     "что ты умеешь",
     "помощь",
-    "выход",
+    "выход", 
     "закрыть",
     "стоп",
     "спасибо",
@@ -104,13 +111,30 @@ function isSystemPhrase(text) {
     "нет",
     "отмена",
     "правила",
-    "подсказка"
+    "подсказка",
+    "новая игра",
+    "сдаюсь",
+    "начать игру"
   ];
 
+  // Check for exact matches first
+  for (var i = 0; i < systemPhrases.length; i++) {
+    if (lowercaseText === systemPhrases[i]) {
+      return true;
+    }
+  }
+  
+  // Then check for partial matches
   for (var i = 0; i < systemPhrases.length; i++) {
     if (lowercaseText.indexOf(systemPhrases[i]) !== -1) {
       return true;
     }
   }
+  
+  // Also check if it's just a one or two letter text
+  if (text.length <= 2) {
+    return true;
+  }
+  
   return false;
 }

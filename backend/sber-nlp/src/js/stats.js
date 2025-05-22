@@ -1,5 +1,5 @@
 function getGameStats(context) {
-  var request = get_request(context);
+  var request = getRequest(context);
   var items = get_items(request);
   var gameState = get_game_state(request);
 
@@ -17,6 +17,33 @@ function getGameStats(context) {
     gameOver: gameState.gameOver === true,
     bestRank: bestRank,
   };
+}
+
+function getGameStatusMessage(context) {
+  var stats = getGameStats(context);
+  
+  if (stats.gameOver) {
+    return "Вы уже выиграли эту игру! Скажите 'новая игра', чтобы начать заново.";
+  } 
+  
+  if (!stats.guessCount) {
+    return "Вы еще не назвали ни одного слова. Чтобы угадать слово, скажите 'слово [ваше слово]'.";
+  }
+  
+  // Get best ranking word
+  var request = getRequest(context);
+  var closestWord = get_closest_word(request);
+  var bestRank = stats.bestRank;
+  
+  var message = "Вы проверили " + stats.guessCount + " слов. ";
+  
+  if (closestWord) {
+    message += "Ваше ближайшее слово к загаданному: '" + closestWord.value + "' с рангом " + closestWord.number + ". ";
+  }
+  
+  message += getEncouragingMessage(stats);
+  
+  return message;
 }
 
 function getEncouragingMessage(stats) {

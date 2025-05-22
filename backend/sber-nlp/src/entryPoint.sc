@@ -16,45 +16,54 @@ patterns:
     $AnyText = $nonEmptyGarbage
     $String = $nonEmptyGarbage
     $Number = $nonEmptyGarbage
+    $GameCommands = (новая игра|сдаюсь|правила|помощь|начать игру)
+    $GuessWord = $nonEmptyGarbage
 
 theme: /
+
     state: Start
         q!: $regex</start>
         q!: (запусти|открой|вруби) [игру] [в] contexto
         a: Начинаем игру Contexto! Чтобы узнать, как играть, скажите "помощь".
 
         script:
-            addSuggestions(["Помощь", "Правила", "Новая игра"], $context);
+            addSuggestions(["Помощь", "Правила", "Начать игру"], $context);
 
     state: StartGame
         q!: (начать|начни|начинай|давай|поехали|старт|стартуй) [новую|новый] [игру|раунд]
         q!: начать игру
 
-        script:
-            startGame($context);
-
         a: Игра началась!
 
         script:
+            startGame($context);
+            $session.gameStarted = true;
+
+            // Show rules on first game only
+            if (!$session.rulesShown) {
+                $reactions.answer("Подсказка: чтобы узнать правила игры, скажите 'правила'.");
+                $session.rulesShown = true;
+            }
+
             addSuggestions(["Правила", "Новая игра", "Сдаюсь"], $context);
 
     state: GameStatus
         q!: [как] [мои|у меня] [дела|результаты|прогресс]
         q!: [сколько] [я] [уже] (угадал|отгадал|назвал|проверил) [слов]
+        q!: [какое] [моё|мое] [самое] близкое слово
+        q!: [какой] [у меня] [лучший] результат
 
         script:
+            var statusMessage = getGameStatusMessage($context);
+            $reactions.answer(statusMessage);
+
+            // Add appropriate suggestions based on game state
             var stats = getGameStats($context);
-
             if (stats.gameOver) {
-                $reactions.answer("Вы уже выиграли эту игру! Скажите 'новая игра', чтобы начать заново.");
-            } else if (stats.guessCount == 0) {
-                $reactions.answer("Вы еще не назвали ни одного слова. Чтобы угадать слово, скажите 'слово [ваше слово]'.");
+                addSuggestions(["Новая игра", "Правила"], $context);
             } else {
-                var message = getEncouragingMessage(stats);
-                $reactions.answer("Вы уже проверили " + stats.guessCount + " слов. " + message);
+                addSuggestions(["Помощь", "Правила", "Сдаюсь"], $context);
             }
-
-            addSuggestions(["Помощь", "Правила", "Новая игра"], $context);
 
     state: Fallback
         event!: noMatch
