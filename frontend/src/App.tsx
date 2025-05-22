@@ -11,7 +11,6 @@ import { WelcomeScreen } from "./components/WelcomeScreen";
 import {
   AssistantAction,
   AssistantEvent,
-  AssistantSendData,
   GameState,
   AssistantEventStart,
 } from "./types";
@@ -335,16 +334,6 @@ export class App extends React.Component<Record<string, never>, AppState> {
       if (isCorrect) {
         const successMessage = "Поздравляем! Вы угадали секретное слово!";
         this.sendActionValue("success", successMessage);
-      } else {
-        // Provide feedback on how close they are
-        let feedback = "Очень далеко";
-        if (data.rank <= 10) {
-          feedback = "Очень близко!";
-        } else if (data.rank <= 100) {
-          feedback = "Теплее!";
-        } else if (data.rank <= 250) {
-          feedback = "Холоднее";
-        }
       }
     } catch (error) {
       logger.error("Error making guess:", error);
