@@ -1,11 +1,11 @@
 #pragma once
 
-#include "session_manager.hpp"
-#include "word_dictionary_component.hpp"
-
 #include <userver/server/handlers/http_handler_base.hpp>
 
 namespace contexto {
+
+class SessionManager;
+class WordDictionaryComponent;
 
 class GuessHandler final : public userver::server::handlers::HttpHandlerBase {
 public:

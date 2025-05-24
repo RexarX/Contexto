@@ -5,10 +5,10 @@
 
 #include <userver/components/loggable_component_base.hpp>
 #include <userver/engine/shared_mutex.hpp>
-#include <userver/logging/log.hpp>
-#include <userver/yaml_config/schema.hpp>
 
 namespace contexto {
+
+class DictionaryFilterComponent;
 
 class WordDictionaryComponent final : public userver::components::LoggableComponentBase {
 public:
@@ -23,9 +23,7 @@ public:
     return dictionary_.ContainsWord(word);
   }
 
-  const models::DictionaryWord* GenerateNewTargetWord() const {
-    return dictionary_.GetRandomWordByType(dictionary_preferred_word_type_);
-  }
+  const models::DictionaryWord* GenerateNewTargetWord() const;
 
   std::optional<int> CalculateRank(std::string_view guessed_word, std::string_view target_word) const;
 
@@ -59,8 +57,7 @@ private:
 
   WordDictionary dictionary_;
   size_t max_dictionary_words_ = 0;
-  models::WordType embeddings_preferred_word_type_ = models::WordType::kUnknown;
-  models::WordType dictionary_preferred_word_type_ = models::WordType::kUnknown;
+  const DictionaryFilterComponent& dictionary_filter_;
 
   mutable std::mt19937 rng_{std::random_device{}()};
 };

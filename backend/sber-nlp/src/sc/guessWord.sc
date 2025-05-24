@@ -17,7 +17,7 @@ theme: /
                 guess = guess.trim();
                 guessWord(guess, $context);
             } else {
-                $reactions.answer("Не совсем понятно, повторите пожалуйста. Скажите 'слово [ваше слово]'.");
+                $reactions.answer("Не совсем понятно, повторите пожалуйста.");
             }
 
     state: UnknownWord
@@ -25,5 +25,5 @@ theme: /
         script:
             var eventData = getEventData($context);
             if (eventData.value) {
-                $reactions.answer("Я не знаю слова \"" + eventData.value + "\". Попробуйте другое слово.");
+                $reactions.answer("Я не знаю этого слова. Попробуйте другое.");
             }

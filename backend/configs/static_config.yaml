@@ -21,10 +21,16 @@ components_manager:
 
     word-dictionary:
       embeddings-path: assets/ruwikiruscorpora-nobigrams_upos_skipgram_300_5_2018.vec
-      embeddings-preferred-word-type: any
       dictionary-path: assets/small_russian_nouns.txt
       max-dictionary-words: 0
-      dictionary-preferred-word-type: noun
+
+    dictionary-filter:
+      blacklisted-words-path: assets/blacklisted_words.txt
+      embedding-preferred-types:
+        - any
+      dictionary-preferred-types:
+        - noun
+      min-word-length: 2
 
     tests-control:
       load-enabled: false

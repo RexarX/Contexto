@@ -32,6 +32,7 @@ const MobileForm = styled.form`
   gap: 0.75rem;
   width: 100%;
   margin: 0 auto;
+  padding-bottom: 60px;
 `;
 
 const MobileInputWrapper = styled.div`
@@ -152,18 +153,6 @@ export class GuessInput extends React.Component<
     } else {
       return (
         <MobileForm onSubmit={this.handleSubmit}>
-          <MobileInputWrapper>
-            <TextField
-              placeholder="Введите слово"
-              value={this.state.guess}
-              onChange={this.handleChange}
-              disabled={disabled}
-              required
-              autoFocus
-              style={{ width: "100%" }}
-            />
-          </MobileInputWrapper>
-
           <MobileButtonsWrapper>
             <Button type="submit" view="primary" disabled={disabled} size="s">
               Угадать
@@ -175,6 +164,18 @@ export class GuessInput extends React.Component<
               </Button>
             )}
           </MobileButtonsWrapper>
+
+          <MobileInputWrapper>
+            <TextField
+              placeholder="Введите слово"
+              value={this.state.guess}
+              onChange={this.handleChange}
+              disabled={disabled}
+              required
+              autoFocus
+              style={{ width: "100%" }}
+            />
+          </MobileInputWrapper>
         </MobileForm>
       );
     }

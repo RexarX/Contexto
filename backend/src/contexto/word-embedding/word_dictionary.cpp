@@ -1,11 +1,13 @@
 #include "word_dictionary.hpp"
 
+#include <contexto/dictionary_filter_component.hpp>
+
 #include <userver/logging/log.hpp>
 
 namespace contexto {
 
-bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, models::WordType type_filter,
-                                                  bool load_dictionary_from_embeddings) {
+bool WordDictionary::LoadFromVectorFile(std::string_view file_path, const DictionaryFilterComponent& filter,
+                                        bool load_dictionary_from_embeddings) {
   std::ifstream file(file_path.data());
   if (!file.is_open()) {
     LOG_ERROR() << "Failed to open vector file: " << file_path;
@@ -35,8 +37,7 @@ bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, mo
     return false;
   }
 
-  LOG_INFO() << "Loading word embeddings with dimension " << vector_size << " filtered by word type "
-             << std::to_underlying(type_filter);
+  LOG_INFO() << "Loading word embeddings with dimension " << vector_size;
 
   // Clear and pre-allocate storage
   words_with_embeddings_.clear();
@@ -71,27 +72,17 @@ bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, mo
       continue;
     }
 
-    // Parse word and POS tag
-    models::WordType word_type = models::WordType::kUnknown;
-
-    // Check if the word has a POS tag (format: "word_POS")
-    const size_t pos_separator = word_with_pos.find('_');
-    if (pos_separator != std::string::npos) {
-      const std::string_view word_view(word_with_pos.data(), pos_separator);
-      const std::string_view pos_tag_view(word_with_pos.data() + pos_separator + 1,
-                                          word_with_pos.size() - pos_separator - 1);
-      word_type = models::GetWordTypeFromPOS(pos_tag_view);
-      if (type_filter != models::WordType::kAny && word_type != type_filter) {
-        ++filtered_words;
-        continue;
-      }
+    if (filter.ShouldFilterOutEmbedding(word_with_pos)) {
+      LOG_INFO() << "1111111111 | " << word_with_pos;
+      ++filtered_words;
+      continue;
     }
 
     models::DictionaryWord dict_word{.word_with_pos = std::move(word_with_pos)};
     const std::string_view word = dict_word.GetWord();
 
-    // Skip words that are too short
-    if (word.length() < 2) {
+    // Skip invalid words (this is a basic check that should always be applied)
+    if (word.empty()) {
       ++filtered_words;
       continue;
     }
@@ -145,8 +136,8 @@ bool WordDictionary::LoadFromVectorFileWithFilter(std::string_view file_path, mo
   return !words_with_embeddings_.empty();
 }
 
-bool WordDictionary::LoadDictionaryWithFilter(std::string_view dictionary_path, models::WordType type_filter,
-                                              size_t max_words) {
+bool WordDictionary::LoadDictionary(std::string_view dictionary_path, const DictionaryFilterComponent& filter,
+                                    size_t max_words) {
   std::ifstream file(dictionary_path.data());
   if (!file.is_open()) {
     LOG_ERROR() << "Failed to open dictionary file: " << dictionary_path;
@@ -168,7 +159,6 @@ bool WordDictionary::LoadDictionaryWithFilter(std::string_view dictionary_path, 
 
     } catch (const std::exception& e) {
       LOG_WARNING() << "Failed to parse word count, using the line as a word: " << e.what();
-      // Treat the first line as a word
       file.seekg(0);
     }
   }
@@ -181,15 +171,9 @@ bool WordDictionary::LoadDictionaryWithFilter(std::string_view dictionary_path, 
     line = line.substr(0, line.find_last_not_of(" \t\r\n") + 1);
     if (line.empty()) continue;
 
-    // Parse word and POS tag if present
-    models::WordType word_type = models::WordType::kUnknown;
-    const size_t pos_separator = line.find('_');
-    if (pos_separator != std::string::npos) {
-      const std::string_view pos_tag_view(line.data() + pos_separator + 1, line.size() - pos_separator - 1);
-      word_type = models::GetWordTypeFromPOS(pos_tag_view);
-      if (type_filter != models::WordType::kAny && word_type != type_filter) continue;
-    } else {
-      word_type = type_filter;
+    if (filter.ShouldFilterOutDictionary(line)) {
+      ++skipped_words;
+      continue;
     }
 
     // Only add the word if we don't already have it
@@ -197,9 +181,10 @@ bool WordDictionary::LoadDictionaryWithFilter(std::string_view dictionary_path, 
       // Try to find in embeddings
       const auto it = word_with_pos_index_.find(line);
       if (it != word_with_pos_index_.end()) {
-        words_.push_back(words_with_embeddings_[it->second].word_with_pos);
+        auto& word_with_embeddings = words_with_embeddings_[it->second];
+        words_.push_back(word_with_embeddings.word_with_pos);
         words_lookup_.insert(words_.back());
-        dict_type_index_[word_type].push_back(it->second);
+        dict_type_index_[word_with_embeddings.GetType()].push_back(it->second);
         ++loaded_words;
       } else {
         ++skipped_words;
@@ -447,6 +432,16 @@ std::vector<std::pair<const models::DictionaryWord*, float>> WordDictionary::Get
   // Return top N results
   similarities.resize(std::min(count, similarities.size()));
   return similarities;
+}
+
+std::span<const size_t> WordDictionary::GetIndicesToWordPOSVariations(std::string_view word) const noexcept {
+  if (models::WordHasPOS(word)) {
+    word = models::GetWordFromWordWithPOS(word);
+  }
+
+  const auto it = word_to_words_with_pos_.find(word);
+  if (it == word_to_words_with_pos_.end()) return {};
+  return it->second;
 }
 
 void WordDictionary::BuildIndices() {

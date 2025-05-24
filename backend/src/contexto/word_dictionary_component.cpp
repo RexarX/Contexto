@@ -1,6 +1,8 @@
 #include "word_dictionary_component.hpp"
+#include "dictionary_filter_component.hpp"
 
 #include <userver/components/component_config.hpp>
+#include <userver/components/component_context.hpp>
 #include <userver/logging/log.hpp>
 #include <userver/utils/assert.hpp>
 #include <userver/yaml_config/merge_schemas.hpp>
@@ -8,38 +10,20 @@
 namespace contexto {
 
 WordDictionaryComponent::WordDictionaryComponent(const userver::components::ComponentConfig& config,
-                                                 const userver::components::ComponentContext& context)
-    : LoggableComponentBase(config, context) {
+  const userver::components::ComponentContext& context)
+: LoggableComponentBase(config, context), dictionary_filter_(context.FindComponent<DictionaryFilterComponent>()) {
   std::string embeddings_path;
   if (config.HasMember("embeddings-path")) {
     embeddings_path = config["embeddings-path"].As<std::string>();
   }
 
-  // Parse preferred word type
-  std::string embeddings_word_type_str = "any";
-  if (config.HasMember("embeddings-preferred-word-type")) {
-    embeddings_word_type_str = config["embeddings-preferred-word-type"].As<std::string>();
-  }
+  max_dictionary_words_ =
+    config.HasMember("max-dictionary-words") ? config["max-dictionary-words"].As<size_t>() : 100000;
 
-  // Map string to enum
-  embeddings_preferred_word_type_ = StringToWordType(embeddings_word_type_str);
-  if (embeddings_preferred_word_type_ == models::WordType::kUnknown) {
-    LOG_WARNING() << "Unknown word type in config: " << embeddings_word_type_str << ", defaulting to any";
-    embeddings_preferred_word_type_ = models::WordType::kAny;
-  }
+  LOG_INFO() << "Initializing word embeddings with max dictionary words: " << max_dictionary_words_;
 
-  LOG_INFO() << "Initializing word embeddings with max words: " << max_dictionary_words_
-             << ", preferred word type: " << embeddings_word_type_str;
-
-  // Load embeddings
-  bool loaded = false;
-  if (embeddings_preferred_word_type_ != models::WordType::kUnknown) {
-    // By default, don't load dictionary from embeddings as we'll try dedicated dictionary
-    loaded = dictionary_.LoadFromVectorFileWithFilter(embeddings_path, embeddings_preferred_word_type_, true);
-  } else {
-    loaded = dictionary_.LoadFromVectorFile(embeddings_path, true);
-  }
-
+  // Load embeddings using the filter component
+  bool loaded = dictionary_.LoadFromVectorFile(embeddings_path, dictionary_filter_, true);
   if (!loaded || dictionary_.EmbeddingsSize() == 0) {
     LOG_ERROR() << "Failed to load word embeddings dictionary";
     throw std::runtime_error("Failed to initialize word dictionary");
@@ -47,39 +31,29 @@ WordDictionaryComponent::WordDictionaryComponent(const userver::components::Comp
     LOG_INFO() << "Successfully loaded embeddings with " << dictionary_.EmbeddingsSize() << " words";
   }
 
-  max_dictionary_words_ =
-      config.HasMember("max-dictionary-words") ? config["max-dictionary-words"].As<size_t>() : 100000;
-
-  // Parse preferred word type
-  std::string dictionary_word_type_str = "any";
-  if (config.HasMember("dictionary-preferred-word-type")) {
-    dictionary_word_type_str = config["dictionary-preferred-word-type"].As<std::string>();
-  }
-
-  // Map string to enum
-  dictionary_preferred_word_type_ = StringToWordType(dictionary_word_type_str);
-  if (dictionary_preferred_word_type_ == models::WordType::kUnknown) {
-    LOG_WARNING() << "Unknown word type in config: " << "'" << dictionary_word_type_str << "'" << ", defaulting to any";
-    dictionary_preferred_word_type_ = models::WordType::kAny;
-  }
-
+  // Load dedicated dictionary if specified
   if (config.HasMember("dictionary-path")) {
-    bool dictionary_loaded = false;
     const auto dictionary_path = config["dictionary-path"].As<std::string>();
-    if (dictionary_preferred_word_type_ != models::WordType::kUnknown) {
-      dictionary_loaded =
-          dictionary_.LoadDictionaryWithFilter(dictionary_path, dictionary_preferred_word_type_, max_dictionary_words_);
-    } else {
-      dictionary_loaded = dictionary_.LoadDictionary(dictionary_path, max_dictionary_words_);
-    }
+    bool dictionary_loaded = dictionary_.LoadDictionary(dictionary_path, dictionary_filter_, max_dictionary_words_);
 
     if (!dictionary_loaded) {
       LOG_WARNING() << "Failed to load dedicated dictionary from " << dictionary_path
-                    << ", falling back to embeddings for dictionary";
+      << ", falling back to embeddings for dictionary";
     }
   }
 
   LOG_INFO() << "Dictionary loaded with " << dictionary_.DictionarySize() << " words";
+}
+
+const models::DictionaryWord* WordDictionaryComponent::GenerateNewTargetWord() const {
+  if (dictionary_filter_.HasPreferredDictionaryTypes()) {
+    // Select a random type from the preferred dictionary types
+    const auto& preferred_types = dictionary_filter_.GetDictionaryPreferredTypes();
+    std::uniform_int_distribution<size_t> dist(0, preferred_types.size() - 1);
+    return dictionary_.GetRandomWordByType(preferred_types[dist(rng_)]);
+  } else {
+    return dictionary_.GetRandomWord();
+  }
 }
 
 std::optional<int> WordDictionaryComponent::CalculateRank(std::string_view guessed_word,
@@ -230,10 +204,6 @@ properties:
     type: string
     description: Path to embeddings
     defaultDescription: assets/ruwikiruscorpora-nobigrams_upos_skipgram_300_5_2018.vec
-  embeddings-preferred-word-type:
-    type: string
-    description: Type of words to prioritize (noun, verb, adjective, etc. or 'any')
-    defaultDescription: any
   dictionary-path:
     type: string
     description: Path to dedicated word dictionary file (one word per line)
@@ -241,10 +211,6 @@ properties:
     type: integer
     description: Maximum number of words to load from the dictionary file
     defaultDescription: 0
-  dictionary-preferred-word-type:
-    type: string
-    description: Type of words to prioritize (noun, verb, adjective, etc. or 'any')
-    defaultDescription: any
 )");
 }
 

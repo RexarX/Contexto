@@ -1,4 +1,6 @@
 #include "guess_handler.hpp"
+#include "session_manager.hpp"
+#include "word_dictionary_component.hpp"
 
 #include <userver/components/component_context.hpp>
 #include <userver/formats/json.hpp>

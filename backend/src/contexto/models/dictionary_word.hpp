@@ -33,7 +33,7 @@ constexpr std::array<std::string_view, 17> POS_TAGS = {"ADJ",   "ADP",   "ADV", 
                                                        "PUNCT", "SCONJ", "SYM", "VERB", "X"};
 
 static constexpr bool WordHasPOS(std::string_view word) noexcept {
-  if (word.size() < 4 || word.find_last_of('_') == std::string_view::npos) {
+  if (word.size() < 3 || word.find_last_of('_') == std::string_view::npos) {
     return false;
   }
 

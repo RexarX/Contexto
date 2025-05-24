@@ -35,8 +35,8 @@ void SessionManager::SetTargetWord(const std::string& session_id, std::string_vi
 }
 
 std::vector<std::string_view> SessionManager::GetGuessedWords(const std::string& session_id) const {
-  std::shared_lock lock(mutex_);
   std::vector<std::string_view> words;
+  std::shared_lock lock(mutex_);
 
   const auto it = session_guesses_.find(session_id);
   if (it == session_guesses_.end()) return words;
@@ -57,8 +57,8 @@ std::optional<GuessInfo> SessionManager::GetClosestGuess(const std::string& sess
   }
 
   // Find the guess with the lowest rank (closest to target)
-  const auto closest = std::min_element(guesses.begin(), guesses.end(),
-                                        [](const GuessInfo& lhs, const GuessInfo& rhs) { return lhs.rank < rhs.rank; });
+  const auto closest =
+      std::ranges::min_element(guesses, [](const GuessInfo& lhs, const GuessInfo& rhs) { return lhs.rank < rhs.rank; });
 
   return *closest;
 }

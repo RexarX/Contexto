@@ -1,7 +1,5 @@
 #pragma once
 
-#include "models/dictionary_word.hpp"
-
 #include <userver/components/loggable_component_base.hpp>
 #include <userver/engine/shared_mutex.hpp>
 

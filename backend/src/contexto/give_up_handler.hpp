@@ -1,10 +1,10 @@
 #pragma once
 
-#include "session_manager.hpp"
-
 #include <userver/server/handlers/http_handler_base.hpp>
 
 namespace contexto {
+
+class SessionManager;
 
 class GiveUpHandler final : public userver::server::handlers::HttpHandlerBase {
 public:

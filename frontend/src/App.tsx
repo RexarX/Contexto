@@ -256,7 +256,7 @@ export class App extends React.Component<Record<string, never>, AppState> {
           (data.error.includes("Invalid word") ||
             data.error.includes("word not found"))
         ) {
-          const errorMessage = `Я не знаю слова "${word}"`;
+          const errorMessage = "Неизвестное слово";
 
           // Update UI
           this.setState({

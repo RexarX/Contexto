@@ -143,7 +143,7 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
       <DesktopContainer>
         <DesktopGameCard>
           <DesktopHeader>
-            <StyledHeadline>Contexto</StyledHeadline>
+            <StyledHeadline>Контексто</StyledHeadline>
           </DesktopHeader>
 
           <DesktopContent>
@@ -181,7 +181,7 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
       <MobileContainer>
         <MobileGameCard>
           <MobileHeader>
-            <MobileHeadline>Contexto</MobileHeadline>
+            <MobileHeadline>Контексто</MobileHeadline>
           </MobileHeader>
 
           <MobileContent>

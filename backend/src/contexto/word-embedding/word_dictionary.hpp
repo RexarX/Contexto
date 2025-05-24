@@ -1,9 +1,12 @@
 #pragma once
 
 #include <contexto/models/dictionary_word.hpp>
+
 #include <userver/utils/assert.hpp>
 
 namespace contexto {
+
+class DictionaryFilterComponent;
 
 class WordDictionary {
 public:
@@ -12,18 +15,10 @@ public:
   WordDictionary(WordDictionary&&) noexcept = default;
   ~WordDictionary() = default;
 
-  bool LoadFromVectorFile(std::string_view file_path, bool load_dictionary_from_embeddings = false) {
-    return LoadFromVectorFileWithFilter(file_path, models::WordType::kAny, load_dictionary_from_embeddings);
-  }
+  bool LoadFromVectorFile(std::string_view file_path, const DictionaryFilterComponent& filter,
+                          bool load_dictionary_from_embeddings = false);
 
-  bool LoadFromVectorFileWithFilter(std::string_view file_path, models::WordType type_filter,
-                                    bool load_dictionary_from_embeddings = false);
-
-  bool LoadDictionary(std::string_view dictionary_path, size_t max_words = 0) {
-    return LoadDictionaryWithFilter(dictionary_path, models::WordType::kAny, max_words);
-  }
-
-  bool LoadDictionaryWithFilter(std::string_view dictionary_path, models::WordType type_filter, size_t max_words = 0);
+  bool LoadDictionary(std::string_view dictionary_path, const DictionaryFilterComponent& filter, size_t max_words = 0);
 
   const models::DictionaryWord* FindWord(std::string_view word) const {
     const auto it = word_with_pos_index_.find(word);
@@ -63,23 +58,13 @@ public:
     return nullptr;
   }
 
-  std::span<const size_t> GetIndicesToWordPOSVariations(std::string_view word) const noexcept {
-    if (models::WordHasPOS(word)) {
-      word = models::GetWordFromWordWithPOS(word);
-    }
-
-    const auto it = word_to_words_with_pos_.find(word);
-    if (it == word_to_words_with_pos_.end()) return {};
-    return it->second;
-  }
+  std::span<const size_t> GetIndicesToWordPOSVariations(std::string_view word) const noexcept;
 
   WordDictionary& operator=(const WordDictionary&) = delete;
   WordDictionary& operator=(WordDictionary&&) noexcept = default;
 
   size_t EmbeddingsSize() const noexcept { return words_with_embeddings_.size(); }
-
   size_t DictionarySize() const noexcept { return words_.size(); }
-
   bool HasDedicatedDictionary() const noexcept { return has_dedicated_dictionary_; }
 
 private:
@@ -87,7 +72,6 @@ private:
   static std::string NormalizeWord(std::string_view word) { return utils::utf8::ToLower(word); }
 
   std::vector<models::DictionaryWord> words_with_embeddings_;
-
   std::vector<std::string_view> words_;
   std::unordered_set<std::string_view> words_lookup_;  // For fast lookup
 
@@ -98,8 +82,6 @@ private:
   std::unordered_map<models::WordType, std::vector<size_t>> dict_type_index_;
 
   bool has_dedicated_dictionary_ = false;
-
-  // Random number generator for word selection
   mutable std::mt19937 rng_{std::random_device{}()};
 };
 
