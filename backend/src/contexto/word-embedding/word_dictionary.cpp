@@ -73,7 +73,6 @@ bool WordDictionary::LoadFromVectorFile(std::string_view file_path, const Dictio
     }
 
     if (filter.ShouldFilterOutEmbedding(word_with_pos)) {
-      LOG_INFO() << "1111111111 | " << word_with_pos;
       ++filtered_words;
       continue;
     }

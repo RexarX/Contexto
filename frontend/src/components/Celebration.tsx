@@ -79,13 +79,14 @@ const ModalOverlay = styled.div`
 const ModalContent = styled.div`
   background-color: #222;
   border-radius: 16px;
-  padding: 40px;
+  padding: 40px 20px; /* Reduced horizontal padding to give more space for the word */
   text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
-  width: 90%;
+  max-width: 90%;
+  width: min(500px, 90vw); /* Responsive width */
   position: relative;
   animation: ${popIn} 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden; /* Ensure no overflow */
 `;
 
 const CelebrationTitle = styled(Headline2)`
@@ -101,6 +102,27 @@ const CelebrationWord = styled(Display1)`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: ${glow} 2s infinite alternate;
+
+  /* Better handling for long words */
+  white-space: nowrap;
+  display: block;
+  width: 100%;
+  text-align: center;
+
+  /* Dynamic font size based on word length */
+  font-size: ${(props) => {
+    // Dynamically calculate font size based on word length
+    const wordLength = props.children?.toString().length || 0;
+    if (wordLength > 12) return "clamp(16px, 6vw, 36px)";
+    if (wordLength > 8) return "clamp(18px, 8vw, 42px)";
+    return "clamp(20px, 10vw, 48px)";
+  }};
+
+  /* Ensure padding for better visibility */
+  padding: 0 10px;
+
+  /* Ensure proper rendering on all browsers */
+  transform: translateZ(0);
 `;
 
 const CelebrationMessage = styled(Body1)`

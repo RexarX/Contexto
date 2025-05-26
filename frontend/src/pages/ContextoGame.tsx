@@ -105,6 +105,9 @@ const MobileContent = styled.div`
 
 const MobileBottomArea = styled.div`
   margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 interface ContextoGameProps {
@@ -201,8 +204,9 @@ export const ContextoGame: React.FC<ContextoGameProps> = ({
               />
 
               {gameOver && (
-                <div style={{ marginTop: "0.75rem" }}>
-                  <GuessInput.NewGameButton onClick={onNewGame}>
+                <div style={{ marginTop: "0.5rem" }}>
+                  {" "}
+                  <GuessInput.NewGameButton onClick={onNewGame} layout="mobile">
                     Новая игра
                   </GuessInput.NewGameButton>
                 </div>
