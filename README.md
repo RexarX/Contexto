@@ -22,6 +22,7 @@
         <li><a href="#using-docker">Using Docker</a></li>
       </ul>
     </li>
+    <li><a href="#screenshots">Screenshots</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -75,3 +76,41 @@ git submodule update --init --recursive
 make docker-build
 make docker-up
 ```
+
+## Screenshots
+
+Welcome screen
+
+![screenshot](screenshots/welcome_screen.png)
+
+---
+
+Game screen
+
+![screenshot](screenshots/game_screen.png)
+
+---
+
+Victory screen
+
+![screenshot](screenshots/victory_screen.png)
+
+---
+
+Post victory screen
+
+![screenshot](screenshots/post_victory_screen.png)
+
+
+## License
+
+Distributed under the MIT license. See `LICENSE` for more information.
+
+## Contact
+
+RexarX - who727cares@gmail.com
+PlatonFPS - platonfps@yandex.ru
+
+---
+
+[↑ Back to Top](#readme-top)
